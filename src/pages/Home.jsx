@@ -1,19 +1,14 @@
 import { motion } from "framer-motion";
-import {
-  ChevronRight,
-  Check,
-  ArrowDown,
-  ImagePlus,
-  Instagram,
-  Youtube,
-  Twitter,
-} from "lucide-react";
+import { ChevronRight, Check, ArrowDown, ImagePlus } from "lucide-react";
+
+import { FaInstagram, FaYoutube, FaXTwitter } from "react-icons/fa6";
 import { Link } from "react-router-dom";
 import { translations } from "../data/translations";
 import { useLanguage } from "../context/LanguageContext";
 import { projects } from "../data/projects";
 import { posts } from "../data/posts";
 import Reveal from "../components/Reveal";
+import yourPhoto from "../assets/pz.jpg";
 import featuredImage from "../assets/featured-light.webp";
 
 const ease = [0.25, 0.1, 0.25, 1];
@@ -39,175 +34,327 @@ export default function Home() {
   return (
     <main className="overflow-x-hidden">
       {/* Hero */}
-      <section className="relative px-3 pt-3 md:px-5 md:pt-5">
-        <div className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-violet-50 dark:from-indigo-950/40 dark:via-neutral-950 dark:to-violet-950/30 ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
-          {/* Decorative diagonal streaks */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-40 dark:opacity-30">
-            <div className="absolute -top-10 left-[20%] w-[2px] h-[140%] bg-gradient-to-b from-transparent via-indigo-400/40 to-transparent rotate-[20deg]" />
-            <div className="absolute -top-10 left-[45%] w-[2px] h-[140%] bg-gradient-to-b from-transparent via-violet-400/40 to-transparent rotate-[20deg]" />
-            <div className="absolute -top-10 left-[70%] w-[2px] h-[140%] bg-gradient-to-b from-transparent via-indigo-400/30 to-transparent rotate-[20deg]" />
-          </div>
-
-          <div className="relative px-6 md:px-14 pt-16 md:pt-20 pb-8">
-            {/* Outline echo of the name, sitting behind */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-0 top-[38%] text-center select-none pointer-events-none"
-            >
-              <span
-                className="text-[clamp(3rem,14vw,10rem)] font-black tracking-tight leading-none"
-                style={{
-                  WebkitTextStroke: "1px rgba(79,70,229,0.15)",
-                  color: "transparent",
+      <section className="relative min-h-screen flex items-center px-6 py-24 overflow-hidden">
+        <div className="w-full max-w-5xl mx-auto relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="
+      flex
+      flex-col
+      md:flex-row
+      items-center
+      md:items-start
+      gap-10
+    "
+          >
+            {/* Avatar composition */}
+            <div className="relative shrink-0">
+              {/* floating badge top */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
                 }}
+                className="
+          absolute
+          -top-5
+          -right-8
+          px-3
+          py-1.5
+          rounded-full
+          bg-white
+          dark:bg-neutral-900
+          border
+          border-black/[0.08]
+          dark:border-white/[0.1]
+          shadow-lg
+          text-xs
+          text-neutral-500
+        "
+              >
+                12+ years
+              </motion.div>
+
+              {/* Image shadow layer */}
+              <div
+                className="
+          absolute
+          inset-0
+          rounded-[2rem]
+          bg-indigo-500/20
+          translate-x-3
+          translate-y-3
+          blur-sm
+        "
+              />
+              <div
+                className="
+    absolute
+    inset-0
+    rounded-3xl
+    bg-indigo-500/10
+    translate-x-2
+    translate-y-2
+  "
+              />
+              <img
+                src={yourPhoto}
+                alt={t.heroTitle}
+                className="
+          relative
+          w-32
+          h-32
+          md:w-40
+          md:h-40
+          rounded-[2rem]
+          object-cover
+          border
+          border-black/[0.08]
+          dark:border-white/[0.1]
+          shadow-2xl
+        "
+              />
+
+              {/* floating badge bottom */}
+              <motion.div
+                animate={{ y: [0, 6, 0] }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="
+          absolute
+          -bottom-4
+          -left-8
+          px-3
+          py-1.5
+          rounded-full
+          bg-neutral-900
+          dark:bg-white
+          text-white
+          dark:text-black
+          text-xs
+          shadow-lg
+        "
+              >
+                Product Design
+              </motion.div>
+            </div>
+
+            {/* Content */}
+            <div
+              className="
+      flex-1
+      text-center
+      md:text-left
+    "
+            >
+              <h1
+                className="
+          text-4xl
+          md:text-6xl
+          font-semibold
+          tracking-tight
+          leading-tight
+          text-neutral-900
+          dark:text-white
+        "
               >
                 {t.heroTitle}
-              </span>
-            </div>
+              </h1>
 
-            {/* Big solid title */}
-            <motion.h1
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease }}
-              className="relative z-10 text-center text-[clamp(2.75rem,11vw,8.5rem)] font-black tracking-tight leading-[0.95] text-neutral-900 dark:text-white"
-            >
-              {t.heroTitle}
-            </motion.h1>
-
-            {/* Left / right supporting copy + photo slot */}
-            <div className="relative mt-4 md:mt-0 grid md:grid-cols-[1fr_auto_1fr] gap-8 md:gap-6 items-end">
-              {/* Left column */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.15, ease }}
-                className="order-2 md:order-1 text-center md:text-left"
+              <p
+                className="
+          mt-3
+          text-lg
+          text-indigo-600
+          dark:text-indigo-400
+          font-medium
+        "
               >
-                <p className="text-sm md:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-xs mx-auto md:mx-0">
-                  {t.heroDescriptionSecondary || t.heroDescription}
-                </p>
-                <div className="mt-5 flex justify-center md:justify-start gap-2.5">
-                  <a
-                    href="https://linkedin.com/in/sinadalaei"
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="LinkedIn"
-                    className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center hover:bg-indigo-600 dark:hover:bg-indigo-400 transition-colors"
-                  >
-                    <Instagram size={16} />
-                  </a>
-                  <a
-                    href="https://behance.net/sinadalaei1"
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Behance"
-                    className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center hover:bg-indigo-600 dark:hover:bg-indigo-400 transition-colors"
-                  >
-                    <Youtube size={16} />
-                  </a>
-                  <a
-                    href="mailto:sina10dalaei@gmail.com"
-                    aria-label="Email"
-                    className="w-10 h-10 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center hover:bg-indigo-600 dark:hover:bg-indigo-400 transition-colors"
-                  >
-                    <Twitter size={16} />
-                  </a>
-                </div>
-              </motion.div>
+                {t.heroTag}
+              </p>
 
-              {/* Center — empty photo slot, ready for upload */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.1, ease }}
-                className="order-1 md:order-2 relative mx-auto"
+              <p
+                className="
+          mt-6
+          max-w-xl
+          text-base
+          md:text-lg
+          leading-8
+          text-[var(--muted)]
+        "
               >
-                {/* Replace this block with an <img> once you have a photo:
-                    <img src={yourPhoto} alt="Sina Dalaei" className="w-[260px] md:w-[340px] h-auto object-contain" />
-                */}
-                <div className="w-[220px] h-[280px] md:w-[300px] md:h-[380px] rounded-t-[140px] rounded-b-2xl border-2 border-dashed border-indigo-300/60 dark:border-indigo-400/30 bg-white/40 dark:bg-white/[0.03] backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-neutral-400 dark:text-neutral-500">
-                  <ImagePlus size={28} strokeWidth={1.5} />
-                  <span className="text-xs text-center px-6 leading-relaxed">
-                    Add your photo here
-                  </span>
-                </div>
-              </motion.div>
+                I design digital products from research to polished experiences
+                people love.
+              </p>
 
-              {/* Right column */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.2, ease }}
-                className="order-3 relative text-center md:text-right"
+              <div
+                className="
+          mt-8
+          flex
+          flex-wrap
+          justify-center
+          md:justify-start
+          gap-3
+        "
               >
-                <p className="text-sm md:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-xs mx-auto md:ml-auto">
-                  {t.heroDescription}
-                </p>
-
                 <Link
                   to="/works"
-                  aria-label="Scroll to work"
-                  className="hidden md:inline-flex mt-6 w-11 h-11 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 items-center justify-center hover:bg-indigo-600 dark:hover:bg-indigo-400 transition-colors"
+                  className="
+            px-6
+            py-3
+            rounded-full
+            bg-neutral-900
+            dark:bg-white
+            text-white
+            dark:text-black
+            text-sm
+            font-medium
+            shadow-xl
+            shadow-black/10
+            hover:-translate-y-1
+            transition
+          "
                 >
-                  <ArrowDown size={16} />
+                  {t.heroViewWork}
                 </Link>
-              </motion.div>
-            </div>
-          </div>
 
-          {/* Bottom nav bar */}
-          <div className="relative bg-neutral-900 dark:bg-black">
-            <nav className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 px-6 py-6">
-              {navLinks.map(({ to, key }) => (
                 <Link
-                  key={to}
-                  to={to}
-                  className="text-sm md:text-base font-medium text-neutral-300 hover:text-white transition-colors"
+                  to="/contact"
+                  className="
+            px-6
+            py-3
+            rounded-full
+            border
+            border-black/[0.1]
+            dark:border-white/[0.15]
+            text-sm
+            font-medium
+            hover:bg-neutral-100
+            dark:hover:bg-neutral-900
+            transition
+          "
                 >
-                  {t[key]}
+                  {t.heroContact}
                 </Link>
-              ))}
-            </nav>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Stats */}
+          <div
+            className="
+      mt-20
+      pt-10
+      border-t
+      border-black/[0.06]
+      dark:border-white/[0.08]
+      grid
+      grid-cols-2
+      md:grid-cols-4
+      gap-8
+    "
+          >
+            <div>
+              <p
+                className="
+          text-3xl
+          font-semibold
+          text-neutral-900
+          dark:text-white
+        "
+              >
+                12+
+              </p>
+
+              <p
+                className="
+          mt-2
+          text-sm
+          text-[var(--muted)]
+        "
+              >
+                Years experience
+              </p>
+            </div>
+
+            <div>
+              <p
+                className="
+          text-3xl
+          font-semibold
+          text-neutral-900
+          dark:text-white
+        "
+              >
+                40+
+              </p>
+
+              <p
+                className="
+          mt-2
+          text-sm
+          text-[var(--muted)]
+        "
+              >
+                Projects shipped
+              </p>
+            </div>
+
+            <div>
+              <p
+                className="
+          text-lg
+          font-medium
+          text-neutral-900
+          dark:text-white
+        "
+              >
+                Product Strategy
+              </p>
+
+              <p
+                className="
+          mt-2
+          text-sm
+          text-[var(--muted)]
+        "
+              >
+                Core focus
+              </p>
+            </div>
+
+            <div>
+              <p
+                className="
+          text-lg
+          font-medium
+          text-neutral-900
+          dark:text-white
+        "
+              >
+                UX · Systems · Prototyping
+              </p>
+
+              <p
+                className="
+          mt-2
+          text-sm
+          text-[var(--muted)]
+        "
+              >
+                Expertise
+              </p>
+            </div>
           </div>
         </div>
       </section>
-
-      {/* Quick CTA row under hero */}
-      <div className="px-6 pt-10 pb-4 flex flex-wrap items-center justify-center gap-4">
-        <Link
-          to="/works"
-          className="btn-primary shadow-[0_8px_24px_-6px_rgba(79,70,229,0.35)] hover:-translate-y-0.5 transition-all duration-300"
-        >
-          {t.heroViewWork}
-        </Link>
-        <Link
-          to="/contact"
-          className="btn-secondary hover:gap-2.5 transition-all duration-300"
-        >
-          {t.heroContact}
-          <ChevronRight size={14} />
-        </Link>
-      </div>
-
-      {/* Stats */}
-      <div className="px-6 pb-16 md:pb-24 flex items-center justify-center">
-        {stats.map((stat, i) => (
-          <div key={stat.label} className="flex items-center">
-            {i > 0 && (
-              <span className="h-10 w-px bg-gradient-to-b from-transparent via-black/10 dark:via-white/10 to-transparent mx-8 md:mx-14" />
-            )}
-            <div className="text-center">
-              <p className="text-2xl md:text-3xl font-semibold tracking-tight bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
-                {stat.value}
-              </p>
-              <p className="mt-1.5 text-xs md:text-sm text-[var(--muted)]">
-                {stat.label}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* Featured project */}
       <section className="px-6 pb-24 md:pb-32">
