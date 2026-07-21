@@ -36,7 +36,7 @@ export default function Navbar() {
             onClick={closeMenu}
             className="text-base font-semibold tracking-tight"
           >
-            Sina Dalaei
+            Parnaz Kazemi
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-sm">

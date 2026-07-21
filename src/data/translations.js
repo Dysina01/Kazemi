@@ -7,7 +7,7 @@ export const translations = {
     navContact: "Contact",
 
     heroTag: "Product Designer",
-    heroTitle: "Sina Dalaei",
+    heroTitle: "Parnaz Kazemi",
     heroDescription:
       "Twelve years designing products end to end — from research and strategy to polished interfaces people actually enjoy using.",
     heroDescriptionSecondary:
@@ -108,8 +108,7 @@ export const translations = {
     seeAll: "مشاهده همه",
 
     ctaTitle: "بیایید با هم کار کنیم.",
-    ctaDescription:
-      "آماده نقش‌های ارشد، همکاری محصولی و پروژه‌های معنادار.",
+    ctaDescription: "آماده نقش‌های ارشد، همکاری محصولی و پروژه‌های معنادار.",
     ctaButton: "تماس",
 
     learnMore: "بیشتر بدانید",
