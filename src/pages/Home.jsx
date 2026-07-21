@@ -354,7 +354,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section
+      </section>
 
       {/* Featured project */}
       <section className="px-6 pb-24 md:pb-32">
