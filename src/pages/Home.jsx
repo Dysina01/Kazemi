@@ -8,7 +8,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { projects } from "../data/projects";
 import { posts } from "../data/posts";
 import Reveal from "../components/Reveal";
-import yourPhoto from "../assets/pz.jpg";
+import yourPhoto from "../assets/parnaz.jpg";
 import featuredImage from "../assets/featured-light.webp";
 
 const ease = [0.25, 0.1, 0.25, 1];
