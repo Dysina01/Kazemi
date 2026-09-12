@@ -18,6 +18,13 @@ const thoughts = [
 
 const processLabels = ["RESEARCH", "PRODUCT", "STRATEGY", "DESIGN", "BUSINESS", "HANDOFF"];
 
+const careerStats = [
+  { number: "01", value: "8+", label: "Years of experience", note: "2018 → Now", visual: "rings" },
+  { number: "02", value: "50+", label: "Products scaled", note: "Fintech, banking & digital platforms", visual: "stack" },
+  { number: "03", value: "7+", label: "Years in fintech & banking", note: "Highly regulated environments", visual: "prism" },
+  { number: "04", value: "20+", label: "People collaborated with", note: "Design × product × engineering", visual: "orbit" },
+] as const;
+
 function Header({ dark, onTheme }: { dark: boolean; onTheme: () => void }) {
   const reduceMotion = useReducedMotion();
   const hover = reduceMotion ? undefined : { y: -2 };
@@ -120,25 +127,54 @@ function Process() {
   const reduceMotion = useReducedMotion();
   return (
     <section className="process" aria-label="Product process">
-      <motion.div
-        className="outline-word"
-        initial={reduceMotion ? false : { opacity: 0, scale: .96 }}
-        whileInView={{ opacity: .72, scale: 1 }}
-        viewport={{ once: true, margin: "-18%" }}
-        transition={{ duration: .9, ease: [.22, 1, .36, 1] }}
-      >PRODUCT</motion.div>
+      <div className="outline-word">PRODUCT</div>
       {processLabels.map((label, i) => (
         <motion.span
           key={label}
           style={{ "--i": i } as CSSProperties}
-          initial={reduceMotion ? false : { opacity: 0, y: 18, scale: .94 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          whileHover={reduceMotion ? undefined : { y: -6, scale: 1.045 }}
+          initial={reduceMotion ? false : { opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-14%" }}
-          transition={{ duration: .62, delay: i * .075, ease: [.22, 1, .36, 1] }}
-        >{label}</motion.span>
+          transition={{ duration: .7, delay: i * .075, ease: [.22, 1, .36, 1] }}
+        ><i>{label}</i></motion.span>
       ))}
     </section>
+  );
+}
+
+function CareerVisual({ type }: { type: (typeof careerStats)[number]["visual"] }) {
+  if (type === "rings") return <span className="stat-visual visual-rings" aria-hidden="true"><i /><i /><i /></span>;
+  if (type === "stack") return <span className="stat-visual visual-stack" aria-hidden="true"><i /><i /><i /><b>+</b></span>;
+  if (type === "prism") return <span className="stat-visual visual-prism" aria-hidden="true"><i /><i /><i /></span>;
+  return <span className="stat-visual visual-orbit" aria-hidden="true"><i /><i /><b /></span>;
+}
+
+function CareerCards() {
+  const reduceMotion = useReducedMotion();
+  return (
+    <div className="career-board" aria-label="Career highlights">
+      <span className="career-signature" aria-hidden="true">Parnaz<br />Kazemi</span>
+      <span className="career-path" aria-hidden="true"><i /><i /><i /><i /><i /></span>
+      <div className="career-cards">
+        {careerStats.map((stat, i) => (
+          <motion.article
+            className={`stat-card stat-card-${i + 1}`}
+            key={stat.number}
+            initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-10%" }}
+            transition={{ duration: .72, delay: i * .1, ease: [.22, 1, .36, 1] }}
+          >
+            <span className="stat-index">{stat.number}</span>
+            <CareerVisual type={stat.visual} />
+            <strong>{stat.value}</strong>
+            <h4>{stat.label}</h4>
+            <span className="stat-rule" />
+            <p>{stat.note}</p>
+          </motion.article>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -149,7 +185,7 @@ function About() {
       <div className="bio">
         <motion.div className="bio-heading" initial={reduceMotion ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-15%" }} transition={{ duration: .75, ease: [.22, 1, .36, 1] }}>
           <motion.div className="profile-ring" whileHover={reduceMotion ? undefined : { y: -5, rotate: -2, scale: 1.025 }} transition={{ type: "spring", stiffness: 220, damping: 20 }}>
-            <Image src="/assets/profile.png" alt="Parnaz Kazemi" width={150} height={150} sizes="150px" />
+            <Image src="/assets/profile.png" alt="Parnaz Kazemi" width={235} height={235} sizes="235px" />
           </motion.div>
           <div className="bio-titles"><h2><span>Hey, i’m</span> Parnaz Kazemi</h2><h3>Digital Product Manager &amp; Consultant</h3></div>
         </motion.div>
@@ -159,9 +195,7 @@ function About() {
           <p>Beyond designing interfaces, I focus on building the systems, processes, and cultures that help teams create meaningful user experiences and measurable business impact.</p>
         </motion.div>
       </div>
-      <motion.div className="career-wrap" initial={reduceMotion ? false : { opacity: 0, y: 36 }} whileInView={{ opacity: 1, y: 0 }} whileHover={reduceMotion ? undefined : { y: -5 }} viewport={{ once: true, margin: "-8%" }} transition={{ duration: .9, ease: [.22, 1, .36, 1] }}>
-        <Image className="career" src="/assets/career.png" alt="Career highlights: 8+ years of experience, 50+ products scaled, 7+ years in fintech and banking, and 20+ collaborators" width={1216} height={367} sizes="(max-width: 900px) calc(100vw - 48px), 1216px" />
-      </motion.div>
+      <CareerCards />
     </section>
   );
 }
