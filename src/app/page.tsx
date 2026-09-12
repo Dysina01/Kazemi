@@ -16,6 +16,8 @@ const thoughts = [
   { meta: "Design Process · 5 min", title: "Tara Redesign Process", description: "Idea to Prototype" },
 ];
 
+const processLabels = ["RESEARCH", "PRODUCT", "STRATEGY", "DESIGN", "BUSINESS", "HANDOFF"];
+
 function Header({ dark, onTheme }: { dark: boolean; onTheme: () => void }) {
   const reduceMotion = useReducedMotion();
   const hover = reduceMotion ? undefined : { y: -2 };
@@ -115,18 +117,51 @@ function Works() {
 }
 
 function Process() {
-  const labels = ["RESEARCH", "PRODUCT", "STRATEGY", "DESIGN", "BUSINESS", "HANDOFF"];
-  return <section className="process" aria-label="Product process"><div className="outline-word">PRODUCT</div>{labels.map((label, i) => <motion.span key={label} style={{ "--i": i } as CSSProperties} initial={{ opacity: 0, scale: .8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>{label}</motion.span>)}</section>;
+  const reduceMotion = useReducedMotion();
+  return (
+    <section className="process" aria-label="Product process">
+      <motion.div
+        className="outline-word"
+        initial={reduceMotion ? false : { opacity: 0, scale: .96 }}
+        whileInView={{ opacity: .72, scale: 1 }}
+        viewport={{ once: true, margin: "-18%" }}
+        transition={{ duration: .9, ease: [.22, 1, .36, 1] }}
+      >PRODUCT</motion.div>
+      {processLabels.map((label, i) => (
+        <motion.span
+          key={label}
+          style={{ "--i": i } as CSSProperties}
+          initial={reduceMotion ? false : { opacity: 0, y: 18, scale: .94 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          whileHover={reduceMotion ? undefined : { y: -6, scale: 1.045 }}
+          viewport={{ once: true, margin: "-14%" }}
+          transition={{ duration: .62, delay: i * .075, ease: [.22, 1, .36, 1] }}
+        >{label}</motion.span>
+      ))}
+    </section>
+  );
 }
 
 function About() {
+  const reduceMotion = useReducedMotion();
   return (
     <section className="about" id="about">
       <div className="bio">
-        <div className="bio-heading"><Image src="/assets/profile.png" alt="Parnaz Kazemi" width={150} height={150} /><div><h2>Hey, i’m <b>Parnaz Kazemi</b></h2><h3>Digital Product Manager &amp; Consultant</h3></div></div>
-        <div className="bio-copy"><p>Product Design Leader with +8 years of experience building scalable digital products, design systems, and high-performing teams across fintech and banking.</p><p>I specialize in turning complex challenges into structured product ecosystems by combining UX strategy, DesignOps, and product thinking. I’ve led large-scale redesigns, built React-based design systems across 50+ products, and established frameworks that improve collaboration between design, product, and engineering teams.</p><p>Beyond designing interfaces, I focus on building the systems, processes, and cultures that help teams create meaningful user experiences and measurable business impact.</p></div>
+        <motion.div className="bio-heading" initial={reduceMotion ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-15%" }} transition={{ duration: .75, ease: [.22, 1, .36, 1] }}>
+          <motion.div className="profile-ring" whileHover={reduceMotion ? undefined : { y: -5, rotate: -2, scale: 1.025 }} transition={{ type: "spring", stiffness: 220, damping: 20 }}>
+            <Image src="/assets/profile.png" alt="Parnaz Kazemi" width={150} height={150} sizes="150px" />
+          </motion.div>
+          <div className="bio-titles"><h2><span>Hey, i’m</span> Parnaz Kazemi</h2><h3>Digital Product Manager &amp; Consultant</h3></div>
+        </motion.div>
+        <motion.div className="bio-copy" initial={reduceMotion ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .8, delay: .1, ease: [.22, 1, .36, 1] }}>
+          <p>Product Design Leader with +8 years of experience building scalable digital products, design systems, and high-performing teams across fintech and banking.</p>
+          <p>I specialize in turning complex challenges into structured product ecosystems by combining UX strategy, DesignOps, and product thinking. I’ve led large-scale redesigns, built React-based design systems across 50+ products, and established frameworks that improve collaboration between design, product, and engineering teams.</p>
+          <p>Beyond designing interfaces, I focus on building the systems, processes, and cultures that help teams create meaningful user experiences and measurable business impact.</p>
+        </motion.div>
       </div>
-      <Image className="career" src="/assets/career.png" alt="Career highlights: 8+ years, 50+ products, 7+ teams and 20+ workshops" width={1216} height={367} />
+      <motion.div className="career-wrap" initial={reduceMotion ? false : { opacity: 0, y: 36 }} whileInView={{ opacity: 1, y: 0 }} whileHover={reduceMotion ? undefined : { y: -5 }} viewport={{ once: true, margin: "-8%" }} transition={{ duration: .9, ease: [.22, 1, .36, 1] }}>
+        <Image className="career" src="/assets/career.png" alt="Career highlights: 8+ years of experience, 50+ products scaled, 7+ years in fintech and banking, and 20+ collaborators" width={1216} height={367} sizes="(max-width: 900px) calc(100vw - 48px), 1216px" />
+      </motion.div>
     </section>
   );
 }
