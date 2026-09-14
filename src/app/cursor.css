@@ -21,16 +21,12 @@
     opacity: 0;
     transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(.9);
     transform-origin: 2px 2px;
-    transition: opacity 160ms ease, scale 180ms cubic-bezier(.22,1,.36,1);
+    transition: opacity 160ms ease;
     will-change: transform, opacity;
   }
 
   .figma-cursor.is-visible {
     opacity: 1;
-  }
-
-  .figma-cursor.is-pressed {
-    scale: .9;
   }
 
   .figma-cursor-pointer {
@@ -119,10 +115,6 @@
     opacity: .92;
     transform: scale(1);
     animation: figma-live-pulse 2.4s ease-in-out infinite;
-  }
-
-  .figma-cursor.is-pressed .figma-cursor-label {
-    transform: translate3d(0,2px,0) scale(.96);
   }
 
   .site.dark .figma-cursor-pointer {
