@@ -46,12 +46,9 @@ function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => voi
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
 
   return (
-    <motion.header
+    <header
       className={`portfolio-header${scrolled ? " portfolio-header--scrolled" : ""}`}
       data-state={scrolled ? "onscroll" : "hero"}
-      initial={reduceMotion ? false : { opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: reduceMotion ? .01 : .65, ease: [.22, 1, .36, 1] }}
     >
       <AnimatePresence initial={false} mode="sync">
         {scrolled ? (
@@ -112,7 +109,7 @@ function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => voi
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </header>
   );
 }
 
