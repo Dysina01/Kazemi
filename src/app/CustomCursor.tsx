@@ -4,54 +4,60 @@ import { useEffect, useRef, useState } from "react";
 
 type CursorState = {
   label: string;
+  showLabel: boolean;
   active: boolean;
   pressed: boolean;
   visible: boolean;
 };
 
 const DEFAULT_STATE: CursorState = {
-  label: "Parnaz",
+  label: "",
+  showLabel: false,
   active: false,
   pressed: false,
   visible: false,
 };
 
 function getCursorLabel(target: Element | null) {
-  if (!target) return { label: "Parnaz", active: false };
+  if (!target) return { label: "", showLabel: false, active: false };
 
   const custom = target.closest<HTMLElement>("[data-cursor-label]");
   if (custom?.dataset.cursorLabel) {
-    return { label: custom.dataset.cursorLabel, active: true };
+    return { label: custom.dataset.cursorLabel, showLabel: true, active: true };
   }
 
   const project = target.closest(".project-card");
-  if (project) return { label: "View Project", active: true };
+  if (project) return { label: "View Project", showLabel: true, active: true };
 
   const featured = target.closest(".featured-link");
-  if (featured) return { label: "Review Project", active: true };
+  if (featured) return { label: "Review Project", showLabel: true, active: true };
 
   const thought = target.closest(".thoughts a");
-  if (thought) return { label: "Read", active: true };
+  if (thought) return { label: "Read", showLabel: true, active: true };
 
   const footerLink = target.closest(".footer-links a");
-  if (footerLink) return { label: "Open", active: true };
+  if (footerLink) return { label: "Open", showLabel: true, active: true };
 
   const navLink = target.closest(".site-header nav a");
-  if (navLink) return { label: "Go", active: true };
+  if (navLink) return { label: "Go", showLabel: true, active: true };
 
   const utility = target.closest(".utility");
-  if (utility) return { label: "Switch", active: true };
+  if (utility) return { label: "Switch", showLabel: true, active: true };
 
   const button = target.closest<HTMLElement>(".button");
   if (button) {
     const text = button.textContent?.trim();
-    return { label: text || "Open", active: true };
+    return { label: text || "Open", showLabel: true, active: true };
   }
 
   const interactive = target.closest("a, button, [role='button']");
-  if (interactive) return { label: "Open", active: true };
+  if (interactive) return { label: "Open", showLabel: true, active: true };
 
-  return { label: "Parnaz", active: false };
+  // Sections 5 and 6: About/Bio + Teaching.
+  const bioZone = target.closest(".about, .teaching");
+  if (bioZone) return { label: "Parnaz", showLabel: true, active: false };
+
+  return { label: "", showLabel: false, active: false };
 }
 
 export default function CustomCursor() {
@@ -103,7 +109,7 @@ export default function CustomCursor() {
   return (
     <div
       ref={cursorRef}
-      className={`figma-cursor${state.visible ? " is-visible" : ""}${state.active ? " is-active" : ""}${state.pressed ? " is-pressed" : ""}`}
+      className={`figma-cursor${state.visible ? " is-visible" : ""}${state.showLabel ? " has-label" : ""}${state.active ? " is-active" : ""}${state.pressed ? " is-pressed" : ""}`}
       aria-hidden="true"
     >
       <svg className="figma-cursor-pointer" viewBox="0 0 28 32" fill="none">
