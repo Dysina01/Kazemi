@@ -7,33 +7,6 @@
     cursor: none !important;
   }
 
-  .button,
-  .featured-link,
-  .project-card,
-  .site-header nav a,
-  .utility,
-  .thoughts a,
-  .footer-links a {
-    --magnetic-x: 0px;
-    --magnetic-y: 0px;
-    translate: var(--magnetic-x) var(--magnetic-y);
-    transition-property: translate, background, color, box-shadow, opacity;
-    transition-duration: 420ms, 220ms, 220ms, 220ms, 220ms;
-    transition-timing-function: cubic-bezier(.16,1,.3,1), ease, ease, ease, ease;
-    will-change: translate;
-  }
-
-  .button.is-magnetic,
-  .featured-link.is-magnetic,
-  .project-card.is-magnetic,
-  .site-header nav a.is-magnetic,
-  .utility.is-magnetic,
-  .thoughts a.is-magnetic,
-  .footer-links a.is-magnetic {
-    transition-duration: 90ms, 220ms, 220ms, 220ms, 220ms;
-    transition-timing-function: linear, ease, ease, ease, ease;
-  }
-
   .figma-cursor {
     --cursor-x: -100px;
     --cursor-y: -100px;
@@ -173,14 +146,4 @@
 
 @media (pointer: coarse), (prefers-reduced-motion: reduce) {
   .figma-cursor { display: none !important; }
-
-  .button,
-  .featured-link,
-  .project-card,
-  .site-header nav a,
-  .utility,
-  .thoughts a,
-  .footer-links a {
-    translate: none !important;
-  }
 }
