@@ -19,19 +19,18 @@
     gap: 3px;
     pointer-events: none;
     opacity: 0;
-    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(.88);
+    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(.9);
     transform-origin: 2px 2px;
-    transition: opacity 140ms ease, transform 140ms cubic-bezier(.22,1,.36,1);
+    transition: opacity 160ms ease, scale 180ms cubic-bezier(.22,1,.36,1);
     will-change: transform, opacity;
   }
 
   .figma-cursor.is-visible {
     opacity: 1;
-    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(1);
   }
 
   .figma-cursor.is-pressed {
-    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(.9);
+    scale: .9;
   }
 
   .figma-cursor-pointer {
@@ -42,11 +41,11 @@
     filter: drop-shadow(0 2px 5px rgba(0,0,0,.16));
     transform: rotate(-2deg) scale(1);
     transform-origin: 3px 3px;
-    transition: transform 220ms cubic-bezier(.22,1,.36,1), color 220ms ease, filter 220ms ease;
+    transition: transform 260ms cubic-bezier(.22,1,.36,1), color 220ms ease, filter 220ms ease;
   }
 
   .figma-cursor.has-label .figma-cursor-pointer {
-    transform: rotate(0) scale(1.03);
+    transform: rotate(0deg) scale(1.03);
   }
 
   .figma-cursor.is-active .figma-cursor-pointer {
@@ -61,6 +60,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     max-width: 0;
     padding: 0;
     overflow: hidden;
@@ -75,27 +75,50 @@
     transform: translate3d(-8px,-3px,0) scale(.86);
     transform-origin: left top;
     transition:
-      max-width 300ms cubic-bezier(.22,1,.36,1),
-      padding 300ms cubic-bezier(.22,1,.36,1),
-      opacity 170ms ease,
-      transform 300ms cubic-bezier(.22,1,.36,1),
+      max-width 320ms cubic-bezier(.22,1,.36,1),
+      padding 320ms cubic-bezier(.22,1,.36,1),
+      opacity 180ms ease,
+      transform 320ms cubic-bezier(.22,1,.36,1),
       border-radius 220ms ease,
-      box-shadow 220ms ease;
+      box-shadow 220ms ease,
+      background 220ms ease;
   }
 
   .figma-cursor.has-label .figma-cursor-label {
-    max-width: 180px;
+    max-width: 190px;
     padding: 4px 8px 5px;
     opacity: 1;
     transform: translate3d(0,0,0) scale(1);
   }
 
   .figma-cursor.is-active .figma-cursor-label {
-    max-width: 220px;
+    max-width: 230px;
     padding: 7px 11px 8px;
     border-radius: 4px 12px 12px 12px;
     transform: translate3d(0,1px,0) scale(1);
     box-shadow: 0 8px 24px rgba(54,36,218,.28);
+  }
+
+  .figma-cursor.is-collaborator .figma-cursor-label {
+    background: linear-gradient(135deg,#3624da 0%,#5d49ff 100%);
+    box-shadow: 0 8px 26px rgba(54,36,218,.28);
+  }
+
+  .figma-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0;
+    transform: scale(.3);
+    flex: 0 0 auto;
+    transition: opacity 180ms ease, transform 220ms cubic-bezier(.22,1,.36,1);
+  }
+
+  .figma-cursor.is-collaborator .figma-live-dot {
+    opacity: .92;
+    transform: scale(1);
+    animation: figma-live-pulse 2.4s ease-in-out infinite;
   }
 
   .figma-cursor.is-pressed .figma-cursor-label {
@@ -109,6 +132,15 @@
   .site.dark .figma-cursor-label {
     background: #7867ff;
     box-shadow: 0 6px 22px rgba(120,103,255,.3);
+  }
+
+  .site.dark .figma-cursor.is-collaborator .figma-cursor-label {
+    background: linear-gradient(135deg,#7867ff 0%,#9a8fff 100%);
+  }
+
+  @keyframes figma-live-pulse {
+    0%,100% { transform: scale(.82); opacity: .68; box-shadow: 0 0 0 0 rgba(255,255,255,.38); }
+    50% { transform: scale(1.12); opacity: 1; box-shadow: 0 0 0 4px rgba(255,255,255,0); }
   }
 }
 
