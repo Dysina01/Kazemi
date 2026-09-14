@@ -1,0 +1,82 @@
+@media (pointer: fine) {
+  .cursor-enabled,
+  .cursor-enabled body,
+  .cursor-enabled a,
+  .cursor-enabled button,
+  .cursor-enabled [role="button"] {
+    cursor: none !important;
+  }
+
+  .figma-cursor {
+    --cursor-x: -100px;
+    --cursor-y: -100px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2147483647;
+    display: flex;
+    align-items: flex-start;
+    gap: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(.92);
+    transform-origin: 2px 2px;
+    transition: opacity 120ms ease, transform 90ms cubic-bezier(.2,.8,.2,1);
+    will-change: transform;
+  }
+
+  .figma-cursor.is-visible {
+    opacity: 1;
+    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(1);
+  }
+
+  .figma-cursor.is-pressed {
+    transform: translate3d(var(--cursor-x), var(--cursor-y), 0) scale(.9);
+  }
+
+  .figma-cursor-pointer {
+    width: 24px;
+    height: 28px;
+    color: #3624da;
+    flex: 0 0 auto;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,.16));
+  }
+
+  .figma-cursor-label {
+    min-height: 24px;
+    margin-top: 17px;
+    margin-left: -2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px 5px;
+    border-radius: 3px 10px 10px 10px;
+    background: #3624da;
+    color: #fff;
+    font: 600 12px/15px ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+    letter-spacing: .01em;
+    white-space: nowrap;
+    box-shadow: 0 5px 18px rgba(54,36,218,.22);
+    transition: padding 180ms cubic-bezier(.2,.8,.2,1), border-radius 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1), box-shadow 180ms ease;
+  }
+
+  .figma-cursor.is-active .figma-cursor-label {
+    padding: 7px 11px 8px;
+    border-radius: 4px 12px 12px 12px;
+    transform: translateY(1px);
+    box-shadow: 0 8px 24px rgba(54,36,218,.28);
+  }
+
+  .site.dark .figma-cursor-pointer {
+    color: #7867ff;
+  }
+
+  .site.dark .figma-cursor-label {
+    background: #7867ff;
+    box-shadow: 0 6px 22px rgba(120,103,255,.3);
+  }
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .figma-cursor { display: none !important; }
+}
