@@ -1,5 +1,3 @@
-[main b5148a1] Retry biography layout deployment
- 1 file changed, 1 insertion(+), 1 deletion(-)
 @import "tailwindcss";
 :root{--purple:#3624da;--ink:#000;--muted:#bdbdbd;--paper:#fff;--shadow:20px 20px 80px rgba(0,0,0,.10);--font-rounded:"SF Pro Rounded Site","SF Pro Rounded",ui-rounded,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 @font-face{font-family:"SF Pro Rounded Site";src:local("SF Pro Rounded Regular"),local("SFProRounded-Regular");font-style:normal;font-weight:400;font-display:swap}
@@ -181,3 +179,46 @@ html,body,button,a,input,textarea,select{font-family:var(--font-rounded);font-st
   .process .outline-word{font-size:200px;line-height:239px}
 }
 @media(max-width:600px){.bio-titles{flex:1 1 auto;min-width:0;width:100%}.bio h2{width:auto;max-width:100%;white-space:normal}}
+
+/* Complete dark theme */
+.site.dark{--paper:#09090b;--ink:#f7f7fb;--muted:#92929f;--purple:#8176ff;background:#09090b;color:#f7f7fb}
+.site{transition:background-color .5s cubic-bezier(.22,1,.36,1),color .35s ease}
+.site.dark .hero-shell .site-header{color:#f3f3f7}
+.site.dark .hero-shell .site-header nav{background:#0b0b0e;border:1px solid rgba(129,118,255,.13);box-shadow:0 18px 58px rgba(61,46,226,.16)}
+.site.dark .hero-shell .utility img{filter:invert(1) brightness(1.08)}
+.site.dark .hero-shell .site-header nav a:hover,.site.dark .hero-shell .utility:hover{color:#9b92ff}
+.site.dark .hero-shell .hero h1{color:#f9f9fb}
+.site.dark .hero-shell .hero-title-block>p{color:#8f8f9d}
+.site.dark .hero-shapes i,.site.dark .hero-shapes::after{background:#09090b}
+.site.dark .hero-shapes i.is-live{animation-name:hero-shadow-pulse-dark}
+.site.dark .hero-shapes::after{animation-name:hero-shadow-pulse-dark}
+@keyframes hero-shadow-pulse-dark{0%,100%{box-shadow:0 0 0 rgba(97,95,255,0)}45%,55%{box-shadow:24px 28px 116px rgba(97,95,255,.7)}}
+.site.dark .hero-shell .button:not(.primary),.site.dark .works-button{color:#f7f7fb;background:#111116;border:1px solid rgba(129,118,255,.2);box-shadow:0 14px 46px rgba(74,57,255,.2)}
+.site.dark .hero-shell .button:not(.primary):hover,.site.dark .works-button:hover{background:#171721;border-color:rgba(145,134,255,.42);box-shadow:0 20px 64px rgba(97,79,255,.34)}
+.site.dark .hero-shell .button.primary,.site.dark .featured-link{background:#615fff;box-shadow:0 14px 34px rgba(97,95,255,.42)}
+.site.dark .hero-shell .button.primary:hover,.site.dark .featured-link:hover{background:#756fff;box-shadow:0 20px 52px rgba(97,95,255,.58)}
+.site.dark .featured{background:#09090b}
+.site.dark .project-glow{background:radial-gradient(ellipse at 50% 48%,rgba(97,95,255,.62) 0%,rgba(92,73,255,.3) 34%,rgba(42,34,105,.14) 52%,rgba(9,9,11,0) 73%)}
+.site.dark .project-glass i{background:linear-gradient(90deg,rgba(255,255,255,.015),rgba(129,118,255,.08),rgba(255,255,255,.015));opacity:.72}
+.site.dark .featured h2{color:#fff;mix-blend-mode:soft-light}
+.site.dark .project-card:hover .project-art{box-shadow:0 30px 72px rgba(97,79,255,.3)}
+.site.dark .section-title h2{background-image:linear-gradient(#aaa1ff,#6b5eff);background-clip:text}
+.site.dark .section-title p{color:#968dff}
+.site.dark .process .outline-word{-webkit-text-stroke-color:#8176ff;filter:drop-shadow(0 0 18px rgba(97,95,255,.18))}
+.site.dark .process>span>i{color:#f5f4ff;background:rgba(17,17,23,.86);border:1px solid rgba(129,118,255,.14);animation-name:process-label-live-dark}
+@keyframes process-label-live-dark{0%,100%{transform:translate3d(0,-3px,0);box-shadow:0 0 0 rgba(97,95,255,0)}50%{transform:translate3d(0,5px,0);box-shadow:0 18px 58px rgba(97,79,255,.34)}}
+.site.dark .bio h2 .bio-kicker{background-image:linear-gradient(#bdb7ff,#8176ff);background-clip:text}
+.site.dark .bio h2 .bio-name{background-image:linear-gradient(#fff,#bcb5ff);background-clip:text}
+.site.dark .bio h3{background-image:linear-gradient(90deg,#9d94ff,#6e64dc);background-clip:text}
+.site.dark .bio-copy{color:rgba(247,247,251,.78)}
+.site.dark .profile-ring{background:#09090b;border-color:#fff;box-shadow:0 0 46px rgba(129,118,255,.22)}
+.site.dark .career-image-wrap{background:#09090b;box-shadow:0 0 0 100vw #09090b}
+.site.dark .career-image-wrap::after{background:linear-gradient(90deg,#09090b 0%,rgba(9,9,11,0) 4%,rgba(9,9,11,0) 96%,#09090b 100%),linear-gradient(180deg,#09090b 0%,rgba(9,9,11,0) 9%,rgba(9,9,11,0) 82%,#09090b 100%)}
+.site.dark .career-image{filter:invert(1) hue-rotate(180deg) saturate(1.15);mix-blend-mode:screen}
+.site.dark .teaching .section-title h2{background-image:linear-gradient(#fff,#a8a8b4);background-clip:text}
+.site.dark .teaching>img,.site.dark footer>img{filter:invert(1) hue-rotate(180deg) saturate(1.1);mix-blend-mode:screen}
+.site.dark .thoughts a:hover{background:rgba(129,118,255,.08);box-shadow:0 18px 54px rgba(74,57,255,.12)}
+.site.dark .thoughts small,.site.dark .thoughts a p{color:#9393a0}
+.site.dark .footer-links a:focus-visible{outline:2px solid #8176ff;outline-offset:4px}
+@media(max-width:600px){.site.dark .hero-shell .site-header nav{box-shadow:0 16px 54px rgba(97,79,255,.3)}.site.dark .career-image-wrap{box-shadow:0 0 0 24px #09090b}.site.dark .career-image-wrap::after{background:linear-gradient(90deg,#09090b 0%,rgba(9,9,11,0) 2%,rgba(9,9,11,0) 98%,#09090b 100%),linear-gradient(180deg,#09090b 0%,rgba(9,9,11,0) 5%,rgba(9,9,11,0) 88%,#09090b 100%)}}
+@media(prefers-reduced-motion:reduce){.site{transition-duration:.01ms!important}}
