@@ -723,3 +723,28 @@ html,body,button,a,input,textarea,select{font-family:var(--font-rounded);font-st
     transition-duration: .01ms;
   }
 }
+
+
+/* Keep the hero navigation on the true viewport center, independent of side controls. */
+.hero-header__nav {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hero-header__utility:first-of-type {
+  margin-right: auto;
+}
+
+.hero-header__utility:last-of-type {
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .hero-header__nav {
+    top: auto;
+    left: 16px;
+    transform: none;
+  }
+}
