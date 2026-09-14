@@ -42,34 +42,80 @@ function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => voi
   const reduceMotion = useReducedMotion();
   const hover = reduceMotion ? undefined : { y: -2 };
   const navItems = [["About", "#about"], ["Works", "#works"], ["Thoughts", "#thoughts"], ["Contact", "#contact"]];
-  const transition = { duration: reduceMotion ? .01 : .38, ease: [.22, 1, .36, 1] as [number, number, number, number] };
+  const transition = { duration: reduceMotion ? .01 : .46, ease: [.22, 1, .36, 1] as [number, number, number, number] };
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
 
   return (
-    <motion.header className={`site-header${scrolled ? " is-scrolled" : ""}`} data-state={scrolled ? "onscroll" : "hero"} initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .65, ease: [.22, 1, .36, 1] }}>
-      <AnimatePresence initial={false}>
+    <motion.header
+      className={`portfolio-header${scrolled ? " portfolio-header--scrolled" : ""}`}
+      data-state={scrolled ? "onscroll" : "hero"}
+      initial={reduceMotion ? false : { opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? .01 : .65, ease: [.22, 1, .36, 1] }}
+    >
+      <AnimatePresence initial={false} mode="sync">
         {scrolled ? (
-          <motion.div className="header-mode header-scroll-content" key="onscroll" initial={{ opacity: 0, y: -8, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: .99 }} transition={transition}>
-            <motion.button className="header-pill header-icon-pill" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}><Image src="/assets/language-icon.png" alt="" width={18} height={20} /></motion.button>
-            <nav className="header-pill onscroll-nav" aria-label="Primary navigation">
-              {navItems.map(([label, href]) => <motion.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>{label}</motion.a>)}
+          <motion.div
+            className="scroll-header"
+            key="onscroll"
+            initial={reduceMotion ? false : { opacity: 0, y: -10, scale: .97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -6, scale: .985 }}
+            transition={transition}
+          >
+            <motion.button className="scroll-header__pill scroll-header__icon" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
+              <Image src="/assets/language-icon.png" alt="" width={18} height={20} />
+            </motion.button>
+
+            <nav className="scroll-header__pill scroll-header__nav" aria-label="Primary navigation">
+              {navItems.map(([label, href]) => (
+                <motion.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+                  {label}
+                </motion.a>
+              ))}
             </nav>
-            <motion.button className="header-pill header-icon-pill" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}><Image src="/assets/sun-icon.png" alt="" width={24} height={24} /></motion.button>
-            <motion.button className="header-pill header-icon-pill scroll-top-button" onClick={scrollToTop} aria-label="Scroll to top" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}><Image src={arrowUpIcon} alt="" width={24} height={24} unoptimized /></motion.button>
+
+            <motion.button className="scroll-header__pill scroll-header__icon" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
+              <Image src="/assets/sun-icon.png" alt="" width={24} height={24} />
+            </motion.button>
+
+            <motion.button className="scroll-header__pill scroll-header__icon" onClick={scrollToTop} aria-label="Scroll to top" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
+              <Image src={arrowUpIcon} alt="" width={24} height={24} unoptimized />
+            </motion.button>
           </motion.div>
         ) : (
-          <motion.div className="header-mode header-hero-content" key="hero" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={transition}>
-            <motion.button className="utility" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}><Image src="/assets/language-icon.png" alt="" width={18} height={20} /> ENG</motion.button>
-            <nav aria-label="Primary navigation">
-              {navItems.map(([label, href]) => <motion.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>{label}</motion.a>)}
+          <motion.div
+            className="hero-header"
+            key="hero"
+            initial={reduceMotion ? false : { opacity: 0, y: 7 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -7 }}
+            transition={transition}
+          >
+            <motion.button className="hero-header__utility" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+              <Image src="/assets/language-icon.png" alt="" width={18} height={20} />
+              <span>ENG</span>
+            </motion.button>
+
+            <nav className="hero-header__nav" aria-label="Primary navigation">
+              {navItems.map(([label, href]) => (
+                <motion.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+                  {label}
+                </motion.a>
+              ))}
             </nav>
-            <motion.button className="utility" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}><Image src="/assets/sun-icon.png" alt="" width={20} height={20} /> {dark ? "Dark" : "Light"}</motion.button>
+
+            <motion.button className="hero-header__utility" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+              <Image src="/assets/sun-icon.png" alt="" width={20} height={20} />
+              <span>{dark ? "Dark" : "Light"}</span>
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.header>
   );
 }
+
 function Hero() {
   const reduceMotion = useReducedMotion();
   const shapes = [
