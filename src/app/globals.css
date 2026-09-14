@@ -222,3 +222,6 @@ html,body,button,a,input,textarea,select{font-family:var(--font-rounded);font-st
 .site.dark .footer-links a:focus-visible{outline:2px solid #8176ff;outline-offset:4px}
 @media(max-width:600px){.site.dark .hero-shell .site-header nav{box-shadow:0 16px 54px rgba(97,79,255,.3)}.site.dark .career-image-wrap{box-shadow:0 0 0 24px #09090b}.site.dark .career-image-wrap::after{background:linear-gradient(90deg,#09090b 0%,rgba(9,9,11,0) 2%,rgba(9,9,11,0) 98%,#09090b 100%),linear-gradient(180deg,#09090b 0%,rgba(9,9,11,0) 5%,rgba(9,9,11,0) 88%,#09090b 100%)}}
 @media(prefers-reduced-motion:reduce){.site{transition-duration:.01ms!important}}
+
+/* Keep lower-page content paint-stable across browser compositors. */
+.works .section-title,.project-card,.process>span,.bio-heading,.bio-copy,.career-image-wrap,.teaching .section-title,.thoughts .section-title,.thoughts a,footer{opacity:1!important}
