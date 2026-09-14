@@ -144,7 +144,7 @@ function About() {
           <motion.div className="profile-ring" whileHover={reduceMotion ? undefined : { y: -5, rotate: -2, scale: 1.025 }} transition={{ type: "spring", stiffness: 220, damping: 20 }}>
             <Image src="/assets/profile.png" alt="Parnaz Kazemi" width={235} height={235} sizes="235px" />
           </motion.div>
-          <div className="bio-titles"><h2><span>Hey, i’m</span> Parnaz Kazemi</h2><h3>Digital Product Manager &amp; Consultant</h3></div>
+          <div className="bio-titles"><h2><span className="bio-kicker">Hey, i’m</span>{" "}<span className="bio-name">Parnaz Kazemi</span></h2><h3>Digital Product Manager &amp; Consultant</h3></div>
         </motion.div>
         <motion.div className="bio-copy" initial={reduceMotion ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .8, delay: .1, ease: [.22, 1, .36, 1] }}>
           <p>Product Design Leader with +8 years of experience building scalable digital products, design systems, and high-performing teams across fintech and banking.</p>
