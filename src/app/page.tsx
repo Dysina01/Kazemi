@@ -37,11 +37,11 @@ function useScrollReveal() {
   }, []);
 }
 
-function Header({ dark, onTheme }: { dark: boolean; onTheme: () => void }) {
+function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => void; scrolled: boolean }) {
   const reduceMotion = useReducedMotion();
   const hover = reduceMotion ? undefined : { y: -2 };
   return (
-    <motion.header className="site-header" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .65, ease: [.22, 1, .36, 1] }}>
+    <motion.header className={`site-header${scrolled ? " is-scrolled" : ""}`} data-state={scrolled ? "onscroll" : "hero"} initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: .65, ease: [.22, 1, .36, 1] }}>
       <motion.button className="utility" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}><Image src="/assets/language-icon.png" alt="" width={18} height={20} /> ENG</motion.button>
       <nav aria-label="Primary navigation">
         {[["About", "#about"], ["Works", "#works"], ["Thoughts", "#thoughts"], ["Contact", "#contact"]].map(([label, href]) => <motion.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>{label}</motion.a>)}
@@ -138,7 +138,7 @@ function Works() {
 function Process() {
   return (
     <section className="process" aria-label="Product process">
-      <div className="outline-word" data-reveal="scale">PRODUCT</div>
+      <div className="outline-word">PRODUCT</div>
       {processLabels.map((label, i) => (
         <motion.span
           key={label}
@@ -190,6 +190,15 @@ function Footer() {
 export default function Home() {
   useScrollReveal();
   const [dark, setDark] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const updateHeader = () => setScrolled(window.scrollY > 80);
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    return () => window.removeEventListener("scroll", updateHeader);
+  }, []);
+
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("parnaz-portfolio-theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -208,5 +217,5 @@ export default function Home() {
     });
   };
 
-  return <main className={dark ? "site dark" : "site"}><div className="hero-shell"><Header dark={dark} onTheme={toggleTheme} /><Hero /></div><FeaturedProject /><Works /><Process /><About /><Teaching /><Thoughts /><Footer /></main>;
+  return <main className={dark ? "site dark" : "site"}><div className="hero-shell"><Header dark={dark} onTheme={toggleTheme} scrolled={scrolled} /><Hero /></div><FeaturedProject /><Works /><Process /><About /><Teaching /><Thoughts /><Footer /><div className="viewport-blur" aria-hidden="true" /></main>;
 }
