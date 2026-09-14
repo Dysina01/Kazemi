@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./cursor.css";
 import CustomCursor from "./CustomCursor";
-import MagneticInteractions from "./MagneticInteractions";
 
 export const metadata: Metadata = {
   title: "Parnaz Kazemi — Product Manager & Consultant",
@@ -11,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}<MagneticInteractions /><CustomCursor /></body></html>;
+  return <html lang="en"><body>{children}<CustomCursor /></body></html>;
 }
