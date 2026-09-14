@@ -98,9 +98,9 @@ function Works() {
   const reduceMotion = useReducedMotion();
   return (
     <section className="works" id="works">
-      <motion.div initial={reduceMotion ? false : { y: 18 }} whileInView={{ y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .7, ease: [.22, 1, .36, 1] }}><SectionTitle title="PROJECTS" subtitle="Some of my Works" /></motion.div>
+      <div><SectionTitle title="PROJECTS" subtitle="Some of my Works" /></div>
       <div className="project-grid">{projects.map((project, i) => (
-        <motion.a href="#works" className="project-card" key={project.number} initial={reduceMotion ? false : { y: 34 }} whileInView={{ y: 0 }} viewport={{ once: true, margin: "-10%" }} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .68, delay: i * .1, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
+        <motion.a href="#works" className="project-card" key={project.number} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .45, delay: i * .025, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
           <span className={`project-cover project-art theme-${project.theme}`}>
             <span className="project-art-grid" />
             <span className="project-art-orb" />
@@ -136,21 +136,21 @@ function About() {
   return (
     <section className="about" id="about">
       <div className="bio">
-        <motion.div className="bio-heading" initial={reduceMotion ? false : { y: 24 }} whileInView={{ y: 0 }} viewport={{ once: true, margin: "-15%" }} transition={{ duration: .75, ease: [.22, 1, .36, 1] }}>
+        <div className="bio-heading">
           <motion.div className="profile-ring" whileHover={reduceMotion ? undefined : { y: -5, rotate: -2, scale: 1.025 }} transition={{ type: "spring", stiffness: 220, damping: 20 }}>
             <Image src="/assets/profile.png" alt="Parnaz Kazemi" width={235} height={235} sizes="235px" />
           </motion.div>
           <div className="bio-titles"><h2><span className="bio-kicker">Hey, i’m</span>{" "}<span className="bio-name">Parnaz Kazemi</span></h2><h3>Digital Product Manager &amp; Consultant</h3></div>
-        </motion.div>
-        <motion.div className="bio-copy" initial={reduceMotion ? false : { y: 28 }} whileInView={{ y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .8, delay: .1, ease: [.22, 1, .36, 1] }}>
+        </div>
+        <div className="bio-copy">
           <p>Product Design Leader with +8 years of experience building scalable digital products, design systems, and high-performing teams across fintech and banking.</p>
           <p>I specialize in turning complex challenges into structured product ecosystems by combining UX strategy, DesignOps, and product thinking. I’ve led large-scale redesigns, built React-based design systems across 50+ products, and established frameworks that improve collaboration between design, product, and engineering teams.</p>
           <p>Beyond designing interfaces, I focus on building the systems, processes, and cultures that help teams create meaningful user experiences and measurable business impact.</p>
-        </motion.div>
+        </div>
       </div>
-      <motion.div className="career-image-wrap" initial={reduceMotion ? false : { y: 26 }} whileInView={{ y: 0 }} viewport={{ once: true, margin: "-8%" }} transition={{ duration: .9, ease: [.22, 1,.36, 1] }}>
+      <div className="career-image-wrap">
         <Image className="career-image" src="/assets/career.png" alt="Career highlights: 8+ years of experience, 50+ products scaled, 7+ years in fintech and banking, and 20+ collaborators" width={1216} height={367} sizes="(max-width: 1264px) calc(100vw - 48px), 1216px" quality={100} unoptimized draggable={false} />
-      </motion.div>
+      </div>
     </section>
   );
 }
