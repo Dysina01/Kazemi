@@ -168,8 +168,14 @@ html,body,button,a,input,textarea,select{font-family:var(--font-rounded);font-st
 .thoughts h3{font-weight:500;line-height:28px;letter-spacing:-.45px}
 .thoughts a p{font-weight:400;line-height:20px;letter-spacing:0}
 .footer-links a{font-weight:400;line-height:20px;letter-spacing:0}
+.bio-heading{overflow:visible}
+.bio-titles{flex:0 0 auto;min-width:max-content;overflow:visible}
+.bio h2{display:block;width:max-content;max-width:none;overflow:visible}
+.bio h2 .bio-kicker{background:linear-gradient(rgba(136,123,255,.8),rgba(54,36,218,.8));background-clip:text;color:transparent}
+.bio h2 .bio-name{background:linear-gradient(#887bff,#3624da);background-clip:text;color:transparent}
 @media(min-width:901px){
   .featured h2{font-size:250px;line-height:245px}
   .section-title h2{font-size:45px;line-height:54px}
   .process .outline-word{font-size:200px;line-height:239px}
 }
+@media(max-width:600px){.bio-titles{flex:1 1 auto;min-width:0;width:100%}.bio h2{width:auto;max-width:100%;white-space:normal}}
