@@ -233,3 +233,13 @@ html,body,button,a,input,textarea,select{font-family:var(--font-rounded);font-st
 .site.dark .teaching>img,.site.dark footer>img{position:relative;z-index:0;mix-blend-mode:normal}
 .site.dark .teaching .section-title,.site.dark .thoughts .section-title{position:relative;z-index:2}
 @media(max-width:600px){.site.dark .career-image-wrap{box-shadow:0 0 0 24px #09090b}}
+
+/* Progressive scroll motion: content is visible by default and can never get stuck hidden. */
+[data-reveal].is-revealing{animation:reveal-soft .74s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms) backwards}
+[data-reveal="card"].is-revealing{animation-name:reveal-card}
+[data-reveal="scale"].is-revealing{animation-name:reveal-scale}
+@keyframes reveal-soft{from{opacity:.18;transform:translate3d(0,24px,0);filter:blur(7px)}to{opacity:1;transform:none;filter:none}}
+@keyframes reveal-card{from{opacity:.16;transform:translate3d(0,34px,0) scale(.975);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+@keyframes reveal-scale{from{opacity:.24;transform:translate3d(0,20px,0) scale(.985);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.site.dark [data-reveal].is-revealing{animation-duration:.82s}
+@media(prefers-reduced-motion:reduce){[data-reveal].is-revealing{animation:none!important}}
