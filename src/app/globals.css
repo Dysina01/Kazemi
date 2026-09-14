@@ -238,8 +238,75 @@ html,body,button,a,input,textarea,select{font-family:var(--font-rounded);font-st
 [data-reveal].is-revealing{animation:reveal-soft .74s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms) backwards}
 [data-reveal="card"].is-revealing{animation-name:reveal-card}
 [data-reveal="scale"].is-revealing{animation-name:reveal-scale}
-@keyframes reveal-soft{from{opacity:.18;transform:translate3d(0,24px,0);filter:blur(7px)}to{opacity:1;transform:none;filter:none}}
-@keyframes reveal-card{from{opacity:.16;transform:translate3d(0,34px,0) scale(.975);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
-@keyframes reveal-scale{from{opacity:.24;transform:translate3d(0,20px,0) scale(.985);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes reveal-soft{from{opacity:.18;transform:translate3d(0,24px,0)}to{opacity:1;transform:none}}
+@keyframes reveal-card{from{opacity:.16;transform:translate3d(0,34px,0) scale(.975)}to{opacity:1;transform:none}}
+@keyframes reveal-scale{from{opacity:.24;transform:translate3d(0,20px,0) scale(.985)}to{opacity:1;transform:none}}
 .site.dark [data-reveal].is-revealing{animation-duration:.82s}
 @media(prefers-reduced-motion:reduce){[data-reveal].is-revealing{animation:none!important}}
+
+
+/* Hero header morphs into the compact on-scroll header without changing positioning modes. */
+.hero-shell .site-header{
+  position:fixed;
+  top:24px;
+  left:50%;
+  width:min(1440px,100%);
+  max-width:100%;
+  height:59px;
+  padding:0 112px;
+  border:1px solid transparent;
+  border-radius:0;
+  background:transparent;
+  transform:translateX(-50%);
+  z-index:100;
+  transition:top .55s cubic-bezier(.22,1,.36,1),width .65s cubic-bezier(.22,1,.36,1),padding .65s cubic-bezier(.22,1,.36,1),background-color .45s ease,border-color .45s ease,border-radius .65s cubic-bezier(.22,1,.36,1),box-shadow .55s cubic-bezier(.22,1,.36,1),backdrop-filter .45s ease;
+}
+.hero-shell .site-header.is-scrolled{
+  top:16px;
+  width:min(760px,calc(100% - 32px));
+  padding:0 12px;
+  align-items:center;
+  border-color:rgba(54,36,218,.1);
+  border-radius:999px;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 16px 50px rgba(25,18,92,.12);
+  -webkit-backdrop-filter:blur(22px) saturate(1.35);
+  backdrop-filter:blur(22px) saturate(1.35);
+}
+.hero-shell .site-header.is-scrolled nav{background:transparent;border-color:transparent;box-shadow:none}
+.site.dark .hero-shell .site-header.is-scrolled{
+  color:#f7f7fb;
+  border-color:rgba(129,118,255,.22);
+  background:rgba(11,11,14,.8);
+  box-shadow:0 18px 58px rgba(61,46,226,.27);
+}
+.site.dark .hero-shell .site-header.is-scrolled nav{background:transparent;border-color:transparent;box-shadow:none}
+
+/* A persistent ambient blur at the bottom replaces blur-based scroll reveals. */
+.viewport-blur{
+  position:fixed;
+  z-index:15;
+  left:0;
+  right:0;
+  bottom:0;
+  height:76px;
+  pointer-events:none;
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--paper) 34%,transparent));
+  -webkit-backdrop-filter:blur(12px) saturate(1.08);
+  backdrop-filter:blur(12px) saturate(1.08);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 78%);
+  mask-image:linear-gradient(180deg,transparent 0%,#000 78%);
+}
+@media(max-width:900px){
+  .hero-shell .site-header{top:16px;padding:0 24px}
+  .hero-shell .site-header.is-scrolled{width:calc(100% - 32px);padding:0 16px}
+}
+@media(max-width:600px){
+  .hero-shell .site-header,.hero-shell .site-header.is-scrolled{top:0;width:100%;padding:0 24px;border-color:transparent;border-radius:0;background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+  .hero-shell .site-header.is-scrolled nav{background:var(--paper);border-color:rgba(129,118,255,.14);box-shadow:0 8px 30px rgba(0,0,0,.16)}
+  .viewport-blur{height:92px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-shell .site-header{transition-duration:.01ms!important}
+  .viewport-blur{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+}
