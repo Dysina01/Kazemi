@@ -7,7 +7,6 @@ type CursorState = {
   showLabel: boolean;
   active: boolean;
   collaborator: boolean;
-  pressed: boolean;
   visible: boolean;
 };
 
@@ -16,7 +15,6 @@ const DEFAULT_STATE: CursorState = {
   showLabel: false,
   active: false,
   collaborator: false,
-  pressed: false,
   visible: false,
 };
 
@@ -112,14 +110,10 @@ export default function CustomCursor() {
       setState((current) => ({ ...current, ...next, visible: true }));
     };
 
-    const onDown = () => setState((current) => ({ ...current, pressed: true }));
-    const onUp = () => setState((current) => ({ ...current, pressed: false }));
     const onLeave = () => setState((current) => ({ ...current, visible: false }));
     const onEnter = () => setState((current) => ({ ...current, visible: true }));
 
     window.addEventListener("mousemove", onMove, { passive: true });
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("mouseup", onUp);
     document.documentElement.addEventListener("mouseleave", onLeave);
     document.documentElement.addEventListener("mouseenter", onEnter);
 
@@ -127,8 +121,6 @@ export default function CustomCursor() {
       document.documentElement.classList.remove("cursor-enabled");
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
       window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("mouseup", onUp);
       document.documentElement.removeEventListener("mouseleave", onLeave);
       document.documentElement.removeEventListener("mouseenter", onEnter);
     };
@@ -137,7 +129,7 @@ export default function CustomCursor() {
   return (
     <div
       ref={cursorRef}
-      className={`figma-cursor${state.visible ? " is-visible" : ""}${state.showLabel ? " has-label" : ""}${state.active ? " is-active" : ""}${state.collaborator ? " is-collaborator" : ""}${state.pressed ? " is-pressed" : ""}`}
+      className={`figma-cursor${state.visible ? " is-visible" : ""}${state.showLabel ? " has-label" : ""}${state.active ? " is-active" : ""}${state.collaborator ? " is-collaborator" : ""}`}
       aria-hidden="true"
     >
       <svg className="figma-cursor-pointer" viewBox="0 0 28 32" fill="none">
