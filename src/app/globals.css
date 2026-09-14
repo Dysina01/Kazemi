@@ -748,3 +748,76 @@ html,body,button,a,input,textarea,select{font-family:var(--font-rounded);font-st
     transform: none;
   }
 }
+
+
+/* Header fidelity pass from Figma nodes 242:972 and 242:992. */
+.hero-header__nav {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.hero-header__nav a,
+.scroll-header__nav a {
+  flex: 0 0 auto;
+  color: #2c2c2c;
+  letter-spacing: .16px;
+}
+
+.scroll-header__nav {
+  justify-content: space-between;
+  gap: 0;
+  padding: 12px 16px;
+}
+
+.hero-header__nav a:hover,
+.hero-header__nav a:focus-visible,
+.scroll-header__nav a:hover,
+.scroll-header__nav a:focus-visible {
+  color: #6366f1;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.site.dark .hero-header__nav {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.site.dark .hero-header__nav a:hover,
+.site.dark .hero-header__nav a:focus-visible,
+.site.dark .scroll-header__nav a:hover,
+.site.dark .scroll-header__nav a:focus-visible {
+  color: #818cf8;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  .scroll-header__nav {
+    justify-content: space-between;
+    gap: 0;
+  }
+
+  .scroll-header__nav a {
+    flex: 0 1 auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-header__nav,
+  .scroll-header__nav {
+    padding-inline: 8px;
+  }
+
+  .hero-header__nav a,
+  .scroll-header__nav a {
+    flex: 1 1 0;
+  }
+}
