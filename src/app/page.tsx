@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
 import { useEffect, useState, type CSSProperties } from "react";
 
 const projects = [
@@ -38,6 +38,23 @@ function useScrollReveal() {
   }, []);
 }
 
+
+function useAmbientAnimationVisibility() {
+  useEffect(() => {
+    if (!("IntersectionObserver" in window)) return;
+
+    const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-ambient]"));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        entry.target.classList.toggle("ambient-paused", !entry.isIntersecting);
+      });
+    }, { rootMargin: "160px 0px" });
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+}
+
 function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => void; scrolled: boolean }) {
   const reduceMotion = useReducedMotion();
   const hover = reduceMotion ? undefined : { y: -2 };
@@ -52,7 +69,7 @@ function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => voi
     >
       <AnimatePresence initial={false} mode="sync">
         {scrolled ? (
-          <motion.div
+          <m.div
             className="scroll-header"
             key="onscroll"
             initial={reduceMotion ? false : { opacity: 0, y: -10, scale: .97 }}
@@ -60,28 +77,28 @@ function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => voi
             exit={reduceMotion ? undefined : { opacity: 0, y: -6, scale: .985 }}
             transition={transition}
           >
-            <motion.button className="scroll-header__pill scroll-header__icon" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
+            <m.button className="scroll-header__pill scroll-header__icon" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
               <Image src="/assets/language-icon.png" alt="" width={18} height={20} />
-            </motion.button>
+            </m.button>
 
             <nav className="scroll-header__pill scroll-header__nav" aria-label="Primary navigation">
               {navItems.map(([label, href]) => (
-                <motion.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+                <m.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
                   {label}
-                </motion.a>
+                </m.a>
               ))}
             </nav>
 
-            <motion.button className="scroll-header__pill scroll-header__icon" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
+            <m.button className="scroll-header__pill scroll-header__icon" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
               <Image src="/assets/sun-icon.png" alt="" width={24} height={24} />
-            </motion.button>
+            </m.button>
 
-            <motion.button className="scroll-header__pill scroll-header__icon" onClick={scrollToTop} aria-label="Scroll to top" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
+            <m.button className="scroll-header__pill scroll-header__icon" onClick={scrollToTop} aria-label="Scroll to top" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .94 }}>
               <Image src={arrowUpIcon} alt="" width={24} height={24} unoptimized />
-            </motion.button>
-          </motion.div>
+            </m.button>
+          </m.div>
         ) : (
-          <motion.div
+          <m.div
             className="hero-header"
             key="hero"
             initial={reduceMotion ? false : { opacity: 0, y: 7 }}
@@ -89,24 +106,24 @@ function Header({ dark, onTheme, scrolled }: { dark: boolean; onTheme: () => voi
             exit={reduceMotion ? undefined : { opacity: 0, y: -7 }}
             transition={transition}
           >
-            <motion.button className="hero-header__utility" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+            <m.button className="hero-header__utility" aria-label="Switch language" whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
               <Image src="/assets/language-icon.png" alt="" width={18} height={20} />
               <span>ENG</span>
-            </motion.button>
+            </m.button>
 
             <nav className="hero-header__nav" aria-label="Primary navigation">
               {navItems.map(([label, href]) => (
-                <motion.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+                <m.a key={href} href={href} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
                   {label}
-                </motion.a>
+                </m.a>
               ))}
             </nav>
 
-            <motion.button className="hero-header__utility" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
+            <m.button className="hero-header__utility" onClick={onTheme} aria-label="Toggle color theme" aria-pressed={dark} whileHover={hover} whileTap={reduceMotion ? undefined : { scale: .96 }}>
               <Image src="/assets/sun-icon.png" alt="" width={20} height={20} />
               <span>{dark ? "Dark" : "Light"}</span>
-            </motion.button>
-          </motion.div>
+            </m.button>
+          </m.div>
         )}
       </AnimatePresence>
     </header>
@@ -127,9 +144,9 @@ function Hero() {
     transition: { type: "spring" as const, stiffness: 250, damping: 22, mass: .72 },
   };
   return (
-    <section className="hero" aria-labelledby="hero-title">
+    <section className="hero" aria-labelledby="hero-title" data-ambient>
       <div className="hero-shapes" aria-hidden="true">
-        {shapes.map((shape, i) => <motion.i
+        {shapes.map((shape, i) => <m.i
           className={`${shape}${shadowless.has(shape) ? "" : " is-live"}`}
           style={{ "--pulse-delay": `${(i % 7) * -.58}s` } as CSSProperties}
           key={shape}
@@ -138,16 +155,16 @@ function Hero() {
           transition={{ delay: i * .018, duration: .65, ease: [.22, 1, .36, 1] }}
         />)}
       </div>
-      <motion.div className="hero-copy" initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { delayChildren: .28, staggerChildren: .11 } } }}>
-        <motion.div className="hero-title-block" variants={{ hidden: reduceMotion ? {} : { opacity: 0, y: 22 }, visible: { opacity: 1, y: 0, transition: { duration: .72, ease: [.22, 1, .36, 1] } } }}>
+      <m.div className="hero-copy" initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { delayChildren: .28, staggerChildren: .11 } } }}>
+        <m.div className="hero-title-block" variants={{ hidden: reduceMotion ? {} : { opacity: 0, y: 22 }, visible: { opacity: 1, y: 0, transition: { duration: .72, ease: [.22, 1, .36, 1] } } }}>
           <h1 id="hero-title">Parnaz Kazemi</h1>
           <p>business &amp; product &amp; Strategy</p>
-        </motion.div>
-        <motion.div className="actions" variants={{ hidden: reduceMotion ? {} : { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: .6, ease: [.22, 1, .36, 1] } } }}>
-          <motion.a className="button primary" href="#works" {...buttonMotion}>My Works</motion.a>
-          <motion.a className="button" href="#contact" {...buttonMotion}>Contact</motion.a>
-        </motion.div>
-      </motion.div>
+        </m.div>
+        <m.div className="actions" variants={{ hidden: reduceMotion ? {} : { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: .6, ease: [.22, 1, .36, 1] } } }}>
+          <m.a className="button primary" href="#works" {...buttonMotion}>My Works</m.a>
+          <m.a className="button" href="#contact" {...buttonMotion}>Contact</m.a>
+        </m.div>
+      </m.div>
     </section>
   );
 }
@@ -161,16 +178,16 @@ function FeaturedProject() {
   const glassColumns = Array.from({ length: 20 });
   return (
     <section className="featured" aria-labelledby="featured-title">
-      <motion.div className="project-glow" initial={reduceMotion ? false : { opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: 1.1 }} />
+      <m.div className="project-glow" initial={reduceMotion ? false : { opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: 1.1 }} />
       <div className="project-glass" aria-hidden="true">{glassColumns.map((_, i) => <i key={i} />)}</div>
-      <motion.h2 id="featured-title" initial={reduceMotion ? false : { opacity: 0, x: "-50%", y: 20 }} whileInView={{ opacity: 1, x: "-50%", y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .8, ease: [.22, 1, .36, 1] }}>Project</motion.h2>
-      <motion.div className="project-phone project-phone-left" initial={reduceMotion ? false : { opacity: 0, x: -44, y: 34 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .9, delay: .12, ease: [.22, 1, .36, 1] }}>
+      <m.h2 id="featured-title" initial={reduceMotion ? false : { opacity: 0, x: "-50%", y: 20 }} whileInView={{ opacity: 1, x: "-50%", y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .8, ease: [.22, 1, .36, 1] }}>Project</m.h2>
+      <m.div className="project-phone project-phone-left" initial={reduceMotion ? false : { opacity: 0, x: -44, y: 34 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .9, delay: .12, ease: [.22, 1, .36, 1] }}>
         <Image src="/assets/project-phone-left.png" alt="Featured product shown on a three-dimensional phone" width={627} height={721} />
-      </motion.div>
-      <motion.div className="project-phone project-phone-right" initial={reduceMotion ? false : { opacity: 0, x: 44, y: 28 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .9, delay: .2, ease: [.22, 1, .36, 1] }}>
+      </m.div>
+      <m.div className="project-phone project-phone-right" initial={reduceMotion ? false : { opacity: 0, x: 44, y: 28 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, margin: "-12%" }} transition={{ duration: .9, delay: .2, ease: [.22, 1, .36, 1] }}>
         <Image src="/assets/project-phone-right.png" alt="A second view of the featured product on a three-dimensional phone" width={557} height={655} />
-      </motion.div>
-      <div className="featured-link-wrap"><motion.a className="featured-link" href="#works" initial={reduceMotion ? false : { opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} whileHover={reduceMotion ? undefined : { y: -3, scale: 1.025 }} whileTap={reduceMotion ? undefined : { y: 0, scale: .98 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 240, damping: 22 }}>Review Project</motion.a></div>
+      </m.div>
+      <div className="featured-link-wrap"><m.a className="featured-link" href="#works" initial={reduceMotion ? false : { opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} whileHover={reduceMotion ? undefined : { y: -3, scale: 1.025 }} whileTap={reduceMotion ? undefined : { y: 0, scale: .98 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 240, damping: 22 }}>Review Project</m.a></div>
     </section>
   );
 }
@@ -181,7 +198,7 @@ function Works() {
     <section className="works" id="works">
       <div data-reveal="soft"><SectionTitle title="PROJECTS" subtitle="Some of my Works" /></div>
       <div className="project-grid">{projects.map((project, i) => (
-        <motion.a href="#works" className="project-card" data-reveal="card" style={{ "--reveal-delay": `${i * 90}ms` } as CSSProperties} key={project.number} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .45, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
+        <m.a href="#works" className="project-card" data-reveal="card" style={{ "--reveal-delay": `${i * 90}ms` } as CSSProperties} key={project.number} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .45, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
           <span className={`project-cover project-art theme-${project.theme}`}>
             <span className="project-art-grid" />
             <span className="project-art-orb" />
@@ -190,24 +207,24 @@ function Works() {
             <span className="project-art-number">{project.number}</span>
           </span>
           <span className="project-meta"><strong>{project.title}</strong><small>{project.type}</small></span>
-        </motion.a>
+        </m.a>
       ))}</div>
-      <motion.a className="button works-button" data-reveal="soft" href="#works" whileHover={reduceMotion ? undefined : { y: -3, scale: 1.02 }} whileTap={reduceMotion ? undefined : { y: 0, scale: .98 }} transition={{ type: "spring", stiffness: 250, damping: 22 }}>See all Projects</motion.a>
+      <m.a className="button works-button" data-reveal="soft" href="#works" whileHover={reduceMotion ? undefined : { y: -3, scale: 1.02 }} whileTap={reduceMotion ? undefined : { y: 0, scale: .98 }} transition={{ type: "spring", stiffness: 250, damping: 22 }}>See all Projects</m.a>
     </section>
   );
 }
 
 function Process() {
   return (
-    <section className="process" aria-label="Product process">
+    <section className="process" aria-label="Product process" data-ambient>
       <div className="outline-word">PRODUCT</div>
       {processLabels.map((label, i) => (
-        <motion.span
+        <m.span
           key={label}
           data-reveal="soft"
           style={{ "--i": i, "--reveal-delay": `${i * 70}ms` } as CSSProperties}
           initial={false}
-        ><i>{label}</i></motion.span>
+        ><i>{label}</i></m.span>
       ))}
     </section>
   );
@@ -219,9 +236,9 @@ function About() {
     <section className="about" id="about">
       <div className="bio">
         <div className="bio-heading" data-reveal="soft">
-          <motion.div className="profile-ring" whileHover={reduceMotion ? undefined : { y: -5, rotate: -2, scale: 1.025 }} transition={{ type: "spring", stiffness: 220, damping: 20 }}>
+          <m.div className="profile-ring" whileHover={reduceMotion ? undefined : { y: -5, rotate: -2, scale: 1.025 }} transition={{ type: "spring", stiffness: 220, damping: 20 }}>
             <Image src="/assets/profile.png" alt="Parnaz Kazemi" width={235} height={235} sizes="235px" />
-          </motion.div>
+          </m.div>
           <div className="bio-titles"><h2><span className="bio-kicker">Hey, i’m</span>{" "}<span className="bio-name">Parnaz Kazemi</span></h2><h3>Digital Product Manager &amp; Consultant</h3></div>
         </div>
         <div className="bio-copy">
@@ -231,7 +248,7 @@ function About() {
         </div>
       </div>
       <div className="career-image-wrap" data-reveal="scale">
-        <Image className="career-image" src="/assets/career.png" alt="Career highlights: 8+ years of experience, 50+ products scaled, 7+ years in fintech and banking, and 20+ collaborators" width={1216} height={367} sizes="(max-width: 1264px) calc(100vw - 48px), 1216px" quality={100} unoptimized draggable={false} />
+        <Image className="career-image" src="/assets/career.png" alt="Career highlights: 8+ years of experience, 50+ products scaled, 7+ years in fintech and banking, and 20+ collaborators" width={1216} height={367} sizes="(max-width: 1264px) calc(100vw - 48px), 1216px" quality={100} draggable={false} />
       </div>
     </section>
   );
@@ -242,7 +259,7 @@ function Teaching() {
 }
 
 function Thoughts() {
-  return <section className="thoughts" id="thoughts"><div data-reveal="soft"><SectionTitle title="THOUGHTS" subtitle="Some of my Works" /></div><div>{thoughts.map((item, i) => <motion.a href="#" data-reveal="soft" style={{ "--reveal-delay": `${i * 80}ms` } as CSSProperties} key={item.title} whileHover={{ scale: 1.015 }}><small>{item.meta}</small><h3>{item.title}</h3><p>{item.description}</p></motion.a>)}</div></section>;
+  return <section className="thoughts" id="thoughts"><div data-reveal="soft"><SectionTitle title="THOUGHTS" subtitle="Some of my Works" /></div><div>{thoughts.map((item, i) => <m.a href="#" data-reveal="soft" style={{ "--reveal-delay": `${i * 80}ms` } as CSSProperties} key={item.title} whileHover={{ scale: 1.015 }}><small>{item.meta}</small><h3>{item.title}</h3><p>{item.description}</p></m.a>)}</div></section>;
 }
 
 function Footer() {
@@ -251,14 +268,33 @@ function Footer() {
 
 export default function Home() {
   useScrollReveal();
+  useAmbientAnimationVisibility();
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const updateHeader = () => setScrolled(window.scrollY > 80);
-    updateHeader();
+    let frame = 0;
+    let previous = window.scrollY > 80;
+
+    setScrolled(previous);
+
+    const updateHeader = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        const next = window.scrollY > 80;
+        if (next !== previous) {
+          previous = next;
+          setScrolled(next);
+        }
+        frame = 0;
+      });
+    };
+
     window.addEventListener("scroll", updateHeader, { passive: true });
-    return () => window.removeEventListener("scroll", updateHeader);
+    return () => {
+      window.removeEventListener("scroll", updateHeader);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {
@@ -279,5 +315,5 @@ export default function Home() {
     });
   };
 
-  return <main className={dark ? "site dark" : "site"}><div className="hero-shell"><Header dark={dark} onTheme={toggleTheme} scrolled={scrolled} /><Hero /></div><FeaturedProject /><Works /><Process /><About /><Teaching /><Thoughts /><Footer /><div className="viewport-blur" aria-hidden="true" /></main>;
+  return <LazyMotion features={domAnimation}><main className={dark ? "site dark" : "site"}><div className="hero-shell"><Header dark={dark} onTheme={toggleTheme} scrolled={scrolled} /><Hero /></div><FeaturedProject /><Works /><Process /><About /><Teaching /><Thoughts /><Footer /><div className="viewport-blur" aria-hidden="true" /></main></LazyMotion>;
 }
