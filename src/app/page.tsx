@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 const projects = [
   { title: "Project-1", type: "App/Website", number: "01", theme: "violet" },
@@ -173,5 +173,23 @@ function Footer() {
 
 export default function Home() {
   const [dark, setDark] = useState(false);
-  return <main className={dark ? "site dark" : "site"}><div className="hero-shell"><Header dark={dark} onTheme={() => setDark(v => !v)} /><Hero /></div><FeaturedProject /><Works /><Process /><About /><Teaching /><Thoughts /><Footer /></main>;
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("parnaz-portfolio-theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const shouldUseDark = savedTheme ? savedTheme === "dark" : prefersDark;
+    document.documentElement.style.colorScheme = shouldUseDark ? "dark" : "light";
+    const frame = window.requestAnimationFrame(() => setDark(shouldUseDark));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  const toggleTheme = () => {
+    setDark((current) => {
+      const next = !current;
+      window.localStorage.setItem("parnaz-portfolio-theme", next ? "dark" : "light");
+      document.documentElement.style.colorScheme = next ? "dark" : "light";
+      return next;
+    });
+  };
+
+  return <main className={dark ? "site dark" : "site"}><div className="hero-shell"><Header dark={dark} onTheme={toggleTheme} /><Hero /></div><FeaturedProject /><Works /><Process /><About /><Teaching /><Thoughts /><Footer /></main>;
 }
