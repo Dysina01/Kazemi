@@ -18,6 +18,25 @@ const thoughts = [
 
 const processLabels = ["RESEARCH", "PRODUCT", "STRATEGY", "DESIGN", "BUSINESS", "HANDOFF"];
 
+function useScrollReveal() {
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+
+    const elements = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const element = entry.target as HTMLElement;
+        element.classList.add("is-revealing");
+        observer.unobserve(element);
+      });
+    }, { threshold: .12, rootMargin: "0px 0px -8% 0px" });
+
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+}
+
 function Header({ dark, onTheme }: { dark: boolean; onTheme: () => void }) {
   const reduceMotion = useReducedMotion();
   const hover = reduceMotion ? undefined : { y: -2 };
@@ -98,9 +117,9 @@ function Works() {
   const reduceMotion = useReducedMotion();
   return (
     <section className="works" id="works">
-      <div><SectionTitle title="PROJECTS" subtitle="Some of my Works" /></div>
+      <div data-reveal="soft"><SectionTitle title="PROJECTS" subtitle="Some of my Works" /></div>
       <div className="project-grid">{projects.map((project, i) => (
-        <motion.a href="#works" className="project-card" key={project.number} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .45, delay: i * .025, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
+        <motion.a href="#works" className="project-card" data-reveal="card" style={{ "--reveal-delay": `${i * 90}ms` } as CSSProperties} key={project.number} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .45, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
           <span className={`project-cover project-art theme-${project.theme}`}>
             <span className="project-art-grid" />
             <span className="project-art-orb" />
@@ -111,7 +130,7 @@ function Works() {
           <span className="project-meta"><strong>{project.title}</strong><small>{project.type}</small></span>
         </motion.a>
       ))}</div>
-      <motion.a className="button works-button" href="#works" whileHover={reduceMotion ? undefined : { y: -3, scale: 1.02 }} whileTap={reduceMotion ? undefined : { y: 0, scale: .98 }} transition={{ type: "spring", stiffness: 250, damping: 22 }}>See all Projects</motion.a>
+      <motion.a className="button works-button" data-reveal="soft" href="#works" whileHover={reduceMotion ? undefined : { y: -3, scale: 1.02 }} whileTap={reduceMotion ? undefined : { y: 0, scale: .98 }} transition={{ type: "spring", stiffness: 250, damping: 22 }}>See all Projects</motion.a>
     </section>
   );
 }
@@ -119,11 +138,12 @@ function Works() {
 function Process() {
   return (
     <section className="process" aria-label="Product process">
-      <div className="outline-word">PRODUCT</div>
+      <div className="outline-word" data-reveal="scale">PRODUCT</div>
       {processLabels.map((label, i) => (
         <motion.span
           key={label}
-          style={{ "--i": i } as CSSProperties}
+          data-reveal="soft"
+          style={{ "--i": i, "--reveal-delay": `${i * 70}ms` } as CSSProperties}
           initial={false}
         ><i>{label}</i></motion.span>
       ))}
@@ -136,19 +156,19 @@ function About() {
   return (
     <section className="about" id="about">
       <div className="bio">
-        <div className="bio-heading">
+        <div className="bio-heading" data-reveal="soft">
           <motion.div className="profile-ring" whileHover={reduceMotion ? undefined : { y: -5, rotate: -2, scale: 1.025 }} transition={{ type: "spring", stiffness: 220, damping: 20 }}>
             <Image src="/assets/profile.png" alt="Parnaz Kazemi" width={235} height={235} sizes="235px" />
           </motion.div>
           <div className="bio-titles"><h2><span className="bio-kicker">Hey, i’m</span>{" "}<span className="bio-name">Parnaz Kazemi</span></h2><h3>Digital Product Manager &amp; Consultant</h3></div>
         </div>
         <div className="bio-copy">
-          <p>Product Design Leader with +8 years of experience building scalable digital products, design systems, and high-performing teams across fintech and banking.</p>
-          <p>I specialize in turning complex challenges into structured product ecosystems by combining UX strategy, DesignOps, and product thinking. I’ve led large-scale redesigns, built React-based design systems across 50+ products, and established frameworks that improve collaboration between design, product, and engineering teams.</p>
-          <p>Beyond designing interfaces, I focus on building the systems, processes, and cultures that help teams create meaningful user experiences and measurable business impact.</p>
+          <p data-reveal="soft">Product Design Leader with +8 years of experience building scalable digital products, design systems, and high-performing teams across fintech and banking.</p>
+          <p data-reveal="soft" style={{ "--reveal-delay": "80ms" } as CSSProperties}>I specialize in turning complex challenges into structured product ecosystems by combining UX strategy, DesignOps, and product thinking. I’ve led large-scale redesigns, built React-based design systems across 50+ products, and established frameworks that improve collaboration between design, product, and engineering teams.</p>
+          <p data-reveal="soft" style={{ "--reveal-delay": "160ms" } as CSSProperties}>Beyond designing interfaces, I focus on building the systems, processes, and cultures that help teams create meaningful user experiences and measurable business impact.</p>
         </div>
       </div>
-      <div className="career-image-wrap">
+      <div className="career-image-wrap" data-reveal="scale">
         <Image className="career-image" src="/assets/career.png" alt="Career highlights: 8+ years of experience, 50+ products scaled, 7+ years in fintech and banking, and 20+ collaborators" width={1216} height={367} sizes="(max-width: 1264px) calc(100vw - 48px), 1216px" quality={100} unoptimized draggable={false} />
       </div>
     </section>
@@ -156,18 +176,19 @@ function About() {
 }
 
 function Teaching() {
-  return <section className="teaching"><SectionTitle title="DESIGNING THE NEXT GENERATION" subtitle="Teaching. Mentoring. Growing." /><Image src="/assets/teaching.png" alt="Teaching impact and student statistics" width={896} height={367} /></section>;
+  return <section className="teaching"><div data-reveal="soft"><SectionTitle title="DESIGNING THE NEXT GENERATION" subtitle="Teaching. Mentoring. Growing." /></div><Image data-reveal="scale" src="/assets/teaching.png" alt="Teaching impact and student statistics" width={896} height={367} /></section>;
 }
 
 function Thoughts() {
-  return <section className="thoughts" id="thoughts"><SectionTitle title="THOUGHTS" subtitle="Some of my Works" /><div>{thoughts.map((item) => <motion.a href="#" key={item.title} whileHover={{ scale: 1.015 }}><small>{item.meta}</small><h3>{item.title}</h3><p>{item.description}</p></motion.a>)}</div></section>;
+  return <section className="thoughts" id="thoughts"><div data-reveal="soft"><SectionTitle title="THOUGHTS" subtitle="Some of my Works" /></div><div>{thoughts.map((item, i) => <motion.a href="#" data-reveal="soft" style={{ "--reveal-delay": `${i * 80}ms` } as CSSProperties} key={item.title} whileHover={{ scale: 1.015 }}><small>{item.meta}</small><h3>{item.title}</h3><p>{item.description}</p></motion.a>)}</div></section>;
 }
 
 function Footer() {
-  return <footer id="contact"><Image src="/assets/footer.png" alt="Parnaz Kazemi signature and social links" width={1280} height={318} /><div className="footer-links"><a href="#">LinkedIn</a><a href="#">Behance</a><a href="mailto:hello@example.com">Email</a><a href="#">Resume</a></div></footer>;
+  return <footer id="contact" data-reveal="soft"><Image src="/assets/footer.png" alt="Parnaz Kazemi signature and social links" width={1280} height={318} /><div className="footer-links"><a href="#">LinkedIn</a><a href="#">Behance</a><a href="mailto:hello@example.com">Email</a><a href="#">Resume</a></div></footer>;
 }
 
 export default function Home() {
+  useScrollReveal();
   const [dark, setDark] = useState(false);
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("parnaz-portfolio-theme");
