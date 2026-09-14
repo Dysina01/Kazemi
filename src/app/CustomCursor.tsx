@@ -94,8 +94,8 @@ export default function CustomCursor() {
       if (cursor) {
         const current = currentRef.current;
         const target = targetRef.current;
-        current.x += (target.x - current.x) * 0.42;
-        current.y += (target.y - current.y) * 0.42;
+        current.x += (target.x - current.x) * 0.82;
+        current.y += (target.y - current.y) * 0.82;
         cursor.style.setProperty("--cursor-x", `${current.x}px`);
         cursor.style.setProperty("--cursor-y", `${current.y}px`);
       }
