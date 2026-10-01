@@ -13,6 +13,7 @@ type AnySection = ProjectSection & Record<string, unknown>;
 
 const emptyAsset = (): ProjectAsset => ({ src: "", alt: "", width: 1600, height: 1000 });
 const uid = () => crypto.randomUUID();
+const toSlug = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 export const emptyProject = (): EditableProject => ({
   id: "", slug: "", title: "", category: "", year: String(new Date().getFullYear()),
@@ -35,7 +36,17 @@ function AssetFields({ asset, onChange, slug }: { asset: ProjectAsset; onChange:
     }
     setUploading(false);
   }
-  return <><div className="admin-grid"><label className="admin-field admin-span-2"><span>Media URL</span><input value={asset.src} onChange={(e) => onChange({ ...asset, src: e.target.value })} placeholder="Upload a file or choose from library" /></label><label className="admin-field admin-span-2"><span>Alt text</span><input value={asset.alt} onChange={(e) => onChange({ ...asset, alt: e.target.value })} /></label><label className="admin-field"><span>Width</span><input type="number" value={asset.width} onChange={(e) => onChange({ ...asset, width: Number(e.target.value) })} /></label><label className="admin-field"><span>Height</span><input type="number" value={asset.height} onChange={(e) => onChange({ ...asset, height: Number(e.target.value) })} /></label><label className="admin-field"><span>{uploading ? "Uploading…" : "Upload new file"}</span><input type="file" accept="image/*,video/mp4,video/webm" disabled={uploading} onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload(file); }} /></label><div className="admin-field"><span>Reuse uploaded media</span><button type="button" className="admin-button" onClick={() => setPickerOpen(true)}>Choose from library</button></div></div><MediaPicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={onChange} /></>;
+  return <>
+    <div className="admin-asset-picker">
+      <div className="admin-asset-preview">{asset.src ? <span className="admin-asset-image" style={{ backgroundImage: `url("${asset.src.replaceAll('"', '%22')}")` }} role="img" aria-label={asset.alt || "تصویر انتخاب‌شده"} /> : <span>تصویری انتخاب نشده</span>}</div>
+      <div className="admin-asset-actions">
+        <label className="admin-button admin-button--primary">{uploading ? "در حال آپلود…" : "آپلود تصویر"}<input type="file" accept="image/*,video/mp4,video/webm" disabled={uploading} onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload(file); }} /></label>
+        <button type="button" className="admin-button" onClick={() => setPickerOpen(true)}>انتخاب از تصاویر</button>
+        <details className="admin-advanced-fields"><summary>تنظیمات بیشتر</summary><div className="admin-grid"><label className="admin-field admin-span-2"><span>آدرس فایل</span><input dir="ltr" value={asset.src} onChange={(e) => onChange({ ...asset, src: e.target.value })} /></label><label className="admin-field admin-span-2"><span>توضیح تصویر</span><input value={asset.alt} onChange={(e) => onChange({ ...asset, alt: e.target.value })} /></label><label className="admin-field"><span>عرض</span><input type="number" value={asset.width} onChange={(e) => onChange({ ...asset, width: Number(e.target.value) })} /></label><label className="admin-field"><span>ارتفاع</span><input type="number" value={asset.height} onChange={(e) => onChange({ ...asset, height: Number(e.target.value) })} /></label></div></details>
+      </div>
+    </div>
+    <MediaPicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={onChange} />
+  </>;
 }
 
 function SectionEditor({ section, slug, onChange }: { section: AnySection; slug: string; onChange: (section: AnySection) => void }) {
@@ -60,6 +71,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   const [saveState, setSaveState] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
   const [previewVersion, setPreviewVersion] = useState(0);
   const [draggedKey, setDraggedKey] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const savedSnapshot = useRef(JSON.stringify(initialProject));
@@ -111,50 +123,54 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     return () => window.clearTimeout(timeout);
   }, [project, persist]);
   function save() { startTransition(async () => persist(true)); }
-  function remove() { if (!project.id || !confirm("Delete this project permanently?")) return; startTransition(async () => { await deleteProject(project.id); }); }
-  const statusLabel = saveState === "saving" ? "Saving…" : saveState === "unsaved" ? "Unsaved changes" : saveState === "error" ? "Save failed" : "All changes saved";
+  function remove() { if (!project.id || !confirm("این پروژه برای همیشه حذف شود؟")) return; startTransition(async () => { await deleteProject(project.id); }); }
+  const statusLabel = saveState === "saving" ? "در حال ذخیره…" : saveState === "unsaved" ? "تغییرات ذخیره نشده" : saveState === "error" ? "ذخیره انجام نشد" : "همه تغییرات ذخیره شده";
 
   return <div className="admin-editor-shell">
     <div className="admin-editor">
-      <section className="admin-card admin-editor__section">
-        <header><h2>Project details</h2></header>
+      <nav className="admin-editor-steps" aria-label="مراحل ساخت پروژه">{["اطلاعات کلی", "تصاویر و مشخصات", "محتوای پروژه", "بررسی و انتشار"].map((label, index) => <button type="button" className={activeStep === index ? "is-active" : ""} onClick={() => setActiveStep(index)} key={label}><i>{index + 1}</i><span>{label}</span></button>)}</nav>
+
+      <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 0 ? "is-active" : ""}`}>
+        <header><div><h2>اطلاعات کلی</h2><small>اول اطلاعات اصلی پروژه را وارد کن.</small></div></header>
         <div className="admin-grid">
-          <label className="admin-field admin-span-2"><span>Title</span><input value={project.title} onChange={(e) => set("title", e.target.value)} /></label>
-          <label className="admin-field"><span>Slug</span><input value={project.slug} onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""))} /></label>
-          <label className="admin-field"><span>Category</span><input value={project.category} onChange={(e) => set("category", e.target.value)} /></label>
-          <label className="admin-field"><span>Year</span><input value={project.year} onChange={(e) => set("year", e.target.value)} /></label>
-          <label className="admin-field"><span>External URL</span><input value={project.externalUrl || ""} onChange={(e) => set("externalUrl", e.target.value)} /></label>
-          <label className="admin-field admin-span-2"><span>Description</span><textarea value={project.description} onChange={(e) => set("description", e.target.value)} /></label>
+          <label className="admin-field admin-span-2"><span>نام پروژه</span><input value={project.title} onChange={(e) => { const title = e.target.value; setProject((current) => ({ ...current, title, slug: !current.slug || current.slug === toSlug(current.title) ? toSlug(title) : current.slug })); }} placeholder="مثلاً Designing a Portfolio" /></label>
+          <label className="admin-field"><span>دسته‌بندی</span><input value={project.category} onChange={(e) => set("category", e.target.value)} placeholder="Product Design" /></label>
+          <label className="admin-field"><span>سال پروژه</span><input value={project.year} onChange={(e) => set("year", e.target.value)} /></label>
+          <label className="admin-field admin-span-2"><span>توضیح کوتاه</span><textarea value={project.description} onChange={(e) => set("description", e.target.value)} placeholder="این پروژه درباره چیست؟" /></label>
+          <details className="admin-advanced-fields admin-span-2"><summary>تنظیمات بیشتر</summary><div className="admin-grid"><label className="admin-field"><span>آدرس پروژه</span><input dir="ltr" value={project.slug} onChange={(e) => set("slug", toSlug(e.target.value))} placeholder="project-name" /></label><label className="admin-field"><span>لینک خارجی</span><input dir="ltr" value={project.externalUrl || ""} onChange={(e) => set("externalUrl", e.target.value)} /></label></div></details>
         </div>
+        <footer className="admin-step-footer"><span /><button type="button" className="admin-button admin-button--primary" onClick={() => setActiveStep(1)}>مرحله بعد</button></footer>
       </section>
 
-      <section className="admin-card admin-editor__section"><header><h2>Hero media</h2></header><AssetFields slug={project.slug} asset={project.hero} onChange={(hero) => set("hero", hero)} /></section>
+      <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 1 ? "is-active" : ""}`}><header><div><h2>تصویر اصلی</h2><small>تصویری که روی کارت و ابتدای صفحه پروژه دیده می‌شود.</small></div></header><AssetFields slug={project.slug} asset={project.hero} onChange={(hero) => set("hero", hero)} /></section>
 
-      <section className="admin-card admin-editor__section">
-        <header><h2>Project facts</h2><button type="button" className="admin-button" onClick={() => set("facts", [...project.facts, { label: "", value: "" }])}>+ Fact</button></header>
+      <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 1 ? "is-active" : ""}`}>
+        <header><div><h2>مشخصات پروژه</h2><small>مثل نقش، مدت زمان یا ابزارهای استفاده‌شده.</small></div><button type="button" className="admin-button" onClick={() => set("facts", [...project.facts, { label: "", value: "" }])}>+ افزودن مشخصه</button></header>
         <div className="admin-array">{project.facts.map((fact, index) => <div className="admin-grid admin-array-item" key={`${index}-${fact.label}`}>
-          <label className="admin-field"><span>Label</span><input value={fact.label} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, label: e.target.value } : x))} /></label>
-          <label className="admin-field"><span>Value</span><input value={fact.value} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, value: e.target.value } : x))} /></label>
-          <button type="button" className="admin-button admin-button--danger" onClick={() => set("facts", project.facts.filter((_, i) => i !== index))}>Remove</button>
+          <label className="admin-field"><span>عنوان</span><input value={fact.label} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, label: e.target.value } : x))} placeholder="نقش من" /></label>
+          <label className="admin-field"><span>مقدار</span><input value={fact.value} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, value: e.target.value } : x))} placeholder="Product Designer" /></label>
+          <button type="button" className="admin-button admin-button--danger" onClick={() => set("facts", project.facts.filter((_, i) => i !== index))}>حذف</button>
         </div>)}</div>
+        <footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(0)}>مرحله قبل</button><button type="button" className="admin-button admin-button--primary" onClick={() => setActiveStep(2)}>مرحله بعد</button></footer>
       </section>
 
-      <section className="admin-card admin-editor__section">
-        <header><div><h2>Content sections</h2><small>Drag the handle to reorder</small></div><select className="admin-button" defaultValue="" onChange={(e) => { if (e.target.value) addSection(e.target.value as ProjectSection["_type"]); e.target.value = ""; }}><option value="" disabled>+ Add section</option><option value="contentSection">Text + media</option><option value="gallerySection">Gallery</option><option value="metricsSection">Metrics</option><option value="quoteSection">Quote</option><option value="beforeAfterSection">Before / After</option></select></header>
+      <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 2 ? "is-active" : ""}`}>
+        <header><div><h2>محتوای پروژه</h2><small>بخش‌ها را بساز و با کشیدن دستگیره جابه‌جا کن.</small></div><select className="admin-button" defaultValue="" onChange={(e) => { if (e.target.value) addSection(e.target.value as ProjectSection["_type"]); e.target.value = ""; }}><option value="" disabled>+ افزودن بخش</option><option value="contentSection">متن و تصویر</option><option value="gallerySection">گالری تصاویر</option><option value="metricsSection">نتایج و آمار</option><option value="quoteSection">نقل‌قول</option><option value="beforeAfterSection">قبل و بعد</option></select></header>
         <div className="admin-array">{project.sections.map((section, index) => <div className={`admin-array-item admin-sortable ${draggedKey === section._key ? "is-dragging" : ""}`} key={section._key} onDragOver={(event) => event.preventDefault()} onDrop={() => dropSection(section._key)}>
-          <div className="admin-array-item__bar"><div className="admin-section-title"><button type="button" className="admin-drag-handle" draggable onDragStart={() => setDraggedKey(section._key)} onDragEnd={() => setDraggedKey(null)} aria-label="Drag to reorder">⋮⋮</button><strong>{section._type.replace("Section", "")}</strong></div><div className="admin-array-item__actions"><button type="button" className="admin-icon-button" onClick={() => move(index, -1)}>↑</button><button type="button" className="admin-icon-button" onClick={() => move(index, 1)}>↓</button><button type="button" className="admin-icon-button" onClick={() => set("sections", project.sections.filter((x) => x._key !== section._key))}>×</button></div></div>
+          <div className="admin-array-item__bar"><div className="admin-section-title"><button type="button" className="admin-drag-handle" draggable onDragStart={() => setDraggedKey(section._key)} onDragEnd={() => setDraggedKey(null)} aria-label="جابه‌جایی بخش">⋮⋮</button><strong>{{ contentSection: "متن و تصویر", gallerySection: "گالری تصاویر", metricsSection: "نتایج و آمار", quoteSection: "نقل‌قول", beforeAfterSection: "قبل و بعد" }[section._type]}</strong></div><div className="admin-array-item__actions"><button type="button" className="admin-icon-button" onClick={() => move(index, -1)}>↑</button><button type="button" className="admin-icon-button" onClick={() => move(index, 1)}>↓</button><button type="button" className="admin-icon-button" onClick={() => set("sections", project.sections.filter((x) => x._key !== section._key))}>×</button></div></div>
           <SectionEditor slug={project.slug} section={section as AnySection} onChange={(value) => set("sections", project.sections.map((x) => x._key === section._key ? value : x) as ProjectSection[])} />
         </div>)}</div>
+        <footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(1)}>مرحله قبل</button><button type="button" className="admin-button admin-button--primary" onClick={() => setActiveStep(3)}>بررسی نهایی</button></footer>
       </section>
 
-      <section className="admin-card admin-editor__section"><header><h2>SEO & publishing</h2></header><div className="admin-grid"><label className="admin-field"><span>SEO title</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>SEO description</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>Status</span><select value={project.status} onChange={(e) => set("status", e.target.value as EditableProject["status"])}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label><label className="admin-field"><span>Order</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></section>
+      <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 3 ? "is-active" : ""}`}><header><div><h2>بررسی و انتشار</h2><small>پیش‌نمایش را ببین و بعد پروژه را منتشر کن.</small></div></header><div className="admin-publish-choice"><button type="button" className={project.status === "draft" ? "is-active" : ""} onClick={() => set("status", "draft")}><strong>پیش‌نویس</strong><span>فقط در پنل دیده می‌شود</span></button><button type="button" className={project.status === "published" ? "is-active" : ""} onClick={() => set("status", "published")}><strong>منتشرشده</strong><span>در سایت نمایش داده می‌شود</span></button></div><details className="admin-advanced-fields"><summary>تنظیمات سئو و نمایش</summary><div className="admin-grid"><label className="admin-field"><span>عنوان گوگل</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>توضیحات گوگل</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>ترتیب نمایش</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></details><footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(2)}>مرحله قبل</button></footer></section>
 
-      <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <button type="button" className="admin-button admin-button--danger" onClick={remove}>Delete</button> : null}<button type="button" className="admin-button" onClick={() => window.open(project.id ? `/admin/preview/${project.id}` : `/projects/${project.slug}`, "_blank")}>Full preview</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "Saving…" : "Save now"}</button></div></div>
+      <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <details className="admin-more-menu admin-more-menu--up"><summary aria-label="کارهای بیشتر">•••</summary><div><button className="is-danger" type="button" onClick={remove}>حذف کامل پروژه</button></div></details> : null}<button type="button" className="admin-button" onClick={() => window.open(project.id ? `/admin/preview/${project.id}` : `/projects/${project.slug}`, "_blank")}>پیش‌نمایش</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "در حال ذخیره…" : project.status === "published" ? "ذخیره و انتشار" : "ذخیره پیش‌نویس"}</button></div></div>
     </div>
 
     <aside className="admin-live-preview">
-      <header><div><strong>Live preview</strong><span>{project.id ? "Updates after autosave" : "Save the project to enable"}</span></div>{project.id ? <button className="admin-icon-button" type="button" onClick={() => setPreviewVersion((version) => version + 1)} aria-label="Refresh preview">↻</button> : null}</header>
-      {project.id ? <div className="admin-preview-frame"><iframe key={previewVersion} src={`/admin/preview/${project.id}?v=${previewVersion}`} title="Project live preview" /></div> : <div className="admin-preview-empty">Save this project once to start live preview.</div>}
+      <header><div><strong>پیش‌نمایش زنده</strong><span>{project.id ? "بعد از ذخیره خودکار به‌روز می‌شود" : "ابتدا پروژه را ذخیره کن"}</span></div>{project.id ? <button className="admin-icon-button" type="button" onClick={() => setPreviewVersion((version) => version + 1)} aria-label="تازه‌سازی پیش‌نمایش">↻</button> : null}</header>
+      {project.id ? <div className="admin-preview-frame"><iframe key={previewVersion} src={`/admin/preview/${project.id}?v=${previewVersion}`} title="پیش‌نمایش زنده پروژه" /></div> : <div className="admin-preview-empty">بعد از اولین ذخیره، پیش‌نمایش اینجا نمایش داده می‌شود.</div>}
     </aside>
   </div>;
 }
