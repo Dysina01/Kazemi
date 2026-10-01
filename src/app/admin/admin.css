@@ -1,5 +1,5 @@
 :root { --admin-bg: #f4f5f7; --admin-panel: #fff; --admin-text: #15161a; --admin-muted: #73777f; --admin-line: #e4e6eb; --admin-accent: #6558e8; }
-.admin-shell, .admin-login { min-height: 100vh; background: var(--admin-bg); color: var(--admin-text); font-family: var(--font-rounded), -apple-system, BlinkMacSystemFont, sans-serif; cursor: auto; }
+.admin-shell, .admin-login { min-height: 100vh; background: var(--admin-bg); color: var(--admin-text); font-family: var(--font-persian), Tahoma, sans-serif; cursor: auto; }
 .admin-shell * { box-sizing: border-box; }
 .admin-sidebar { position: fixed; inset: 0 0 0 auto; width: 240px; padding: 28px 20px; background: #111217; color: #fff; display: flex; flex-direction: column; z-index: 5; }
 .admin-brand { font-size: 17px; font-weight: 700; margin-bottom: 36px; }
