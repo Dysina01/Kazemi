@@ -6,7 +6,7 @@ import { supabasePublishableKey, supabaseUrl } from "@/lib/supabase/env";
 
 export type ProjectRecord = Project & {
   id: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "archived";
   featured: boolean;
   sortOrder: number;
 };

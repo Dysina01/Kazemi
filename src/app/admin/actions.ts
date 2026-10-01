@@ -50,6 +50,39 @@ export async function deleteProject(id: string) {
   redirect("/admin");
 }
 
+export async function setProjectStatus(id: string, status: "draft" | "published" | "archived") {
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("projects").update({ status }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function duplicateProject(id: string) {
+  const supabase = await requireAdmin();
+  const { data: source, error: readError } = await supabase.from("projects").select("*").eq("id", id).single();
+  if (readError || !source) return { ok: false, error: readError?.message || "Project not found" };
+  const suffix = Date.now().toString().slice(-6);
+  const { id: _id, created_at: _createdAt, updated_at: _updatedAt, published_at: _publishedAt, ...copy } = source;
+  void _id; void _createdAt; void _updatedAt; void _publishedAt;
+  const { data, error } = await supabase.from("projects").insert({
+    ...copy, slug: `${source.slug}-copy-${suffix}`, title: `${source.title} — Copy`,
+    status: "draft", featured: false, published_at: null,
+  }).select("id").single();
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin");
+  return { ok: true, id: data.id };
+}
+
+export async function reorderProjects(ids: string[]) {
+  const supabase = await requireAdmin();
+  const updates = await Promise.all(ids.map((id, index) => supabase.from("projects").update({ sort_order: index }).eq("id", id)));
+  const failed = updates.find(({ error }) => error);
+  if (failed?.error) return { ok: false, error: failed.error.message };
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

@@ -6,6 +6,7 @@ import type { ProjectAsset, ProjectSection } from "@/sanity/types";
 import type { ProjectRecord } from "@/cms/projects";
 import { createClient } from "@/lib/supabase/client";
 import { deleteProject, saveProject } from "@/app/admin/actions";
+import MediaPicker from "./MediaPicker";
 
 type EditableProject = ProjectRecord;
 type AnySection = ProjectSection & Record<string, unknown>;
@@ -21,6 +22,7 @@ export const emptyProject = (): EditableProject => ({
 
 function AssetFields({ asset, onChange, slug }: { asset: ProjectAsset; onChange: (asset: ProjectAsset) => void; slug: string }) {
   const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   async function upload(file: File) {
     setUploading(true);
     const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
@@ -33,7 +35,7 @@ function AssetFields({ asset, onChange, slug }: { asset: ProjectAsset; onChange:
     }
     setUploading(false);
   }
-  return <div className="admin-grid"><label className="admin-field admin-span-2"><span>Media URL</span><input value={asset.src} onChange={(e) => onChange({ ...asset, src: e.target.value })} placeholder="Upload a file or paste a URL" /></label><label className="admin-field admin-span-2"><span>Alt text</span><input value={asset.alt} onChange={(e) => onChange({ ...asset, alt: e.target.value })} /></label><label className="admin-field"><span>Width</span><input type="number" value={asset.width} onChange={(e) => onChange({ ...asset, width: Number(e.target.value) })} /></label><label className="admin-field"><span>Height</span><input type="number" value={asset.height} onChange={(e) => onChange({ ...asset, height: Number(e.target.value) })} /></label><label className="admin-field admin-span-2"><span>{uploading ? "Uploading…" : "Upload image or video"}</span><input type="file" accept="image/*,video/mp4,video/webm" disabled={uploading} onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload(file); }} /></label></div>;
+  return <><div className="admin-grid"><label className="admin-field admin-span-2"><span>Media URL</span><input value={asset.src} onChange={(e) => onChange({ ...asset, src: e.target.value })} placeholder="Upload a file or choose from library" /></label><label className="admin-field admin-span-2"><span>Alt text</span><input value={asset.alt} onChange={(e) => onChange({ ...asset, alt: e.target.value })} /></label><label className="admin-field"><span>Width</span><input type="number" value={asset.width} onChange={(e) => onChange({ ...asset, width: Number(e.target.value) })} /></label><label className="admin-field"><span>Height</span><input type="number" value={asset.height} onChange={(e) => onChange({ ...asset, height: Number(e.target.value) })} /></label><label className="admin-field"><span>{uploading ? "Uploading…" : "Upload new file"}</span><input type="file" accept="image/*,video/mp4,video/webm" disabled={uploading} onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload(file); }} /></label><div className="admin-field"><span>Reuse uploaded media</span><button type="button" className="admin-button" onClick={() => setPickerOpen(true)}>Choose from library</button></div></div><MediaPicker open={pickerOpen} onClose={() => setPickerOpen(false)} onSelect={onChange} /></>;
 }
 
 function SectionEditor({ section, slug, onChange }: { section: AnySection; slug: string; onChange: (section: AnySection) => void }) {
@@ -145,7 +147,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
         </div>)}</div>
       </section>
 
-      <section className="admin-card admin-editor__section"><header><h2>SEO & publishing</h2></header><div className="admin-grid"><label className="admin-field"><span>SEO title</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>SEO description</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>Status</span><select value={project.status} onChange={(e) => set("status", e.target.value as EditableProject["status"])}><option value="draft">Draft</option><option value="published">Published</option></select></label><label className="admin-field"><span>Order</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></section>
+      <section className="admin-card admin-editor__section"><header><h2>SEO & publishing</h2></header><div className="admin-grid"><label className="admin-field"><span>SEO title</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>SEO description</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>Status</span><select value={project.status} onChange={(e) => set("status", e.target.value as EditableProject["status"])}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label><label className="admin-field"><span>Order</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></section>
 
       <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <button type="button" className="admin-button admin-button--danger" onClick={remove}>Delete</button> : null}<button type="button" className="admin-button" onClick={() => window.open(project.id ? `/admin/preview/${project.id}` : `/projects/${project.slug}`, "_blank")}>Full preview</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "Saving…" : "Save now"}</button></div></div>
     </div>
