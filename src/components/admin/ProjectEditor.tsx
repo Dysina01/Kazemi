@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ProjectAsset, ProjectSection } from "@/sanity/types";
 import type { ProjectRecord } from "@/cms/projects";
@@ -55,8 +55,12 @@ function SectionEditor({ section, slug, onChange }: { section: AnySection; slug:
 export default function ProjectEditor({ initialProject }: { initialProject: EditableProject }) {
   const [project, setProject] = useState(initialProject);
   const [message, setMessage] = useState("");
+  const [saveState, setSaveState] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
+  const [previewVersion, setPreviewVersion] = useState(0);
+  const [draggedKey, setDraggedKey] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const savedSnapshot = useRef(JSON.stringify(initialProject));
   const set = <K extends keyof EditableProject>(key: K, value: EditableProject[K]) => setProject((current) => ({ ...current, [key]: value }));
   const addSection = (type: ProjectSection["_type"]) => {
     const base = { _key: uid(), _type: type };
@@ -68,7 +72,87 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     set("sections", [...project.sections, section as ProjectSection]);
   };
   const move = (index: number, direction: -1 | 1) => { const next = [...project.sections]; const target = index + direction; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target], next[index]]; set("sections", next); };
-  function save() { setMessage(""); startTransition(async () => { const result = await saveProject(JSON.stringify(project)); if (!result.ok) return setMessage(result.error || "Save failed"); setMessage("Saved successfully"); if (!project.id && result.id) router.replace(`/admin/projects/${result.id}`); router.refresh(); }); }
+  function dropSection(targetKey: string) {
+    if (!draggedKey || draggedKey === targetKey) return;
+    const next = [...project.sections];
+    const from = next.findIndex((item) => item._key === draggedKey);
+    const to = next.findIndex((item) => item._key === targetKey);
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    set("sections", next);
+    setDraggedKey(null);
+  }
+  const persist = useCallback(async (showMessage = false) => {
+    if (!project.slug || !project.title) return;
+    setSaveState("saving");
+    if (showMessage) setMessage("");
+    const snapshot = JSON.stringify(project);
+    const result = await saveProject(snapshot);
+    if (!result.ok) {
+      setSaveState("error");
+      setMessage(result.error || "Save failed");
+      return;
+    }
+    savedSnapshot.current = snapshot;
+    setSaveState("saved");
+    setPreviewVersion((version) => version + 1);
+    if (showMessage) setMessage("Saved successfully");
+    if (!project.id && result.id) router.replace(`/admin/projects/${result.id}`);
+    if (showMessage) router.refresh();
+  }, [project, router]);
+  useEffect(() => {
+    if (!project.id) return;
+    const snapshot = JSON.stringify(project);
+    if (snapshot === savedSnapshot.current) return;
+    setSaveState("unsaved");
+    const timeout = window.setTimeout(() => void persist(), 1200);
+    return () => window.clearTimeout(timeout);
+  }, [project, persist]);
+  function save() { startTransition(async () => persist(true)); }
   function remove() { if (!project.id || !confirm("Delete this project permanently?")) return; startTransition(async () => { await deleteProject(project.id); }); }
-  return <div className="admin-editor"><section className="admin-card admin-editor__section"><header><h2>Project details</h2></header><div className="admin-grid"><label className="admin-field admin-span-2"><span>Title</span><input value={project.title} onChange={(e) => set("title", e.target.value)} /></label><label className="admin-field"><span>Slug</span><input value={project.slug} onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""))} /></label><label className="admin-field"><span>Category</span><input value={project.category} onChange={(e) => set("category", e.target.value)} /></label><label className="admin-field"><span>Year</span><input value={project.year} onChange={(e) => set("year", e.target.value)} /></label><label className="admin-field"><span>External URL</span><input value={project.externalUrl || ""} onChange={(e) => set("externalUrl", e.target.value)} /></label><label className="admin-field admin-span-2"><span>Description</span><textarea value={project.description} onChange={(e) => set("description", e.target.value)} /></label></div></section><section className="admin-card admin-editor__section"><header><h2>Hero media</h2></header><AssetFields slug={project.slug} asset={project.hero} onChange={(hero) => set("hero", hero)} /></section><section className="admin-card admin-editor__section"><header><h2>Project facts</h2><button type="button" className="admin-button" onClick={() => set("facts", [...project.facts, { label: "", value: "" }])}>+ Fact</button></header><div className="admin-array">{project.facts.map((fact, index) => <div className="admin-grid admin-array-item" key={index}><label className="admin-field"><span>Label</span><input value={fact.label} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, label: e.target.value } : x))} /></label><label className="admin-field"><span>Value</span><input value={fact.value} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, value: e.target.value } : x))} /></label><button type="button" className="admin-button admin-button--danger" onClick={() => set("facts", project.facts.filter((_, i) => i !== index))}>Remove</button></div>)}</div></section><section className="admin-card admin-editor__section"><header><h2>Content sections</h2><select className="admin-button" defaultValue="" onChange={(e) => { if (e.target.value) addSection(e.target.value as ProjectSection["_type"]); e.target.value = ""; }}><option value="" disabled>+ Add section</option><option value="contentSection">Text + media</option><option value="gallerySection">Gallery</option><option value="metricsSection">Metrics</option><option value="quoteSection">Quote</option><option value="beforeAfterSection">Before / After</option></select></header><div className="admin-array">{project.sections.map((section, index) => <div className="admin-array-item" key={section._key}><div className="admin-array-item__bar"><strong>{section._type.replace("Section", "")}</strong><div className="admin-array-item__actions"><button type="button" className="admin-icon-button" onClick={() => move(index, -1)}>↑</button><button type="button" className="admin-icon-button" onClick={() => move(index, 1)}>↓</button><button type="button" className="admin-icon-button" onClick={() => set("sections", project.sections.filter((x) => x._key !== section._key))}>×</button></div></div><SectionEditor slug={project.slug} section={section as AnySection} onChange={(value) => set("sections", project.sections.map((x) => x._key === section._key ? value : x) as ProjectSection[])} /></div>)}</div></section><section className="admin-card admin-editor__section"><header><h2>SEO & publishing</h2></header><div className="admin-grid"><label className="admin-field"><span>SEO title</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>SEO description</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>Status</span><select value={project.status} onChange={(e) => set("status", e.target.value as EditableProject["status"])}><option value="draft">Draft</option><option value="published">Published</option></select></label><label className="admin-field"><span>Order</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></section><div className="admin-savebar"><div>{message || (pending ? "Saving changes…" : "All changes stay local until you save.")}</div><div className="admin-array-item__actions">{project.id ? <button type="button" className="admin-button admin-button--danger" onClick={remove}>Delete</button> : null}<button type="button" className="admin-button" onClick={() => window.open(`/projects/${project.slug}`, "_blank")}>Preview</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending ? "Saving…" : "Save project"}</button></div></div></div>;
+  const statusLabel = saveState === "saving" ? "Saving…" : saveState === "unsaved" ? "Unsaved changes" : saveState === "error" ? "Save failed" : "All changes saved";
+
+  return <div className="admin-editor-shell">
+    <div className="admin-editor">
+      <section className="admin-card admin-editor__section">
+        <header><h2>Project details</h2></header>
+        <div className="admin-grid">
+          <label className="admin-field admin-span-2"><span>Title</span><input value={project.title} onChange={(e) => set("title", e.target.value)} /></label>
+          <label className="admin-field"><span>Slug</span><input value={project.slug} onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""))} /></label>
+          <label className="admin-field"><span>Category</span><input value={project.category} onChange={(e) => set("category", e.target.value)} /></label>
+          <label className="admin-field"><span>Year</span><input value={project.year} onChange={(e) => set("year", e.target.value)} /></label>
+          <label className="admin-field"><span>External URL</span><input value={project.externalUrl || ""} onChange={(e) => set("externalUrl", e.target.value)} /></label>
+          <label className="admin-field admin-span-2"><span>Description</span><textarea value={project.description} onChange={(e) => set("description", e.target.value)} /></label>
+        </div>
+      </section>
+
+      <section className="admin-card admin-editor__section"><header><h2>Hero media</h2></header><AssetFields slug={project.slug} asset={project.hero} onChange={(hero) => set("hero", hero)} /></section>
+
+      <section className="admin-card admin-editor__section">
+        <header><h2>Project facts</h2><button type="button" className="admin-button" onClick={() => set("facts", [...project.facts, { label: "", value: "" }])}>+ Fact</button></header>
+        <div className="admin-array">{project.facts.map((fact, index) => <div className="admin-grid admin-array-item" key={`${index}-${fact.label}`}>
+          <label className="admin-field"><span>Label</span><input value={fact.label} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, label: e.target.value } : x))} /></label>
+          <label className="admin-field"><span>Value</span><input value={fact.value} onChange={(e) => set("facts", project.facts.map((x, i) => i === index ? { ...x, value: e.target.value } : x))} /></label>
+          <button type="button" className="admin-button admin-button--danger" onClick={() => set("facts", project.facts.filter((_, i) => i !== index))}>Remove</button>
+        </div>)}</div>
+      </section>
+
+      <section className="admin-card admin-editor__section">
+        <header><div><h2>Content sections</h2><small>Drag the handle to reorder</small></div><select className="admin-button" defaultValue="" onChange={(e) => { if (e.target.value) addSection(e.target.value as ProjectSection["_type"]); e.target.value = ""; }}><option value="" disabled>+ Add section</option><option value="contentSection">Text + media</option><option value="gallerySection">Gallery</option><option value="metricsSection">Metrics</option><option value="quoteSection">Quote</option><option value="beforeAfterSection">Before / After</option></select></header>
+        <div className="admin-array">{project.sections.map((section, index) => <div className={`admin-array-item admin-sortable ${draggedKey === section._key ? "is-dragging" : ""}`} key={section._key} onDragOver={(event) => event.preventDefault()} onDrop={() => dropSection(section._key)}>
+          <div className="admin-array-item__bar"><div className="admin-section-title"><button type="button" className="admin-drag-handle" draggable onDragStart={() => setDraggedKey(section._key)} onDragEnd={() => setDraggedKey(null)} aria-label="Drag to reorder">⋮⋮</button><strong>{section._type.replace("Section", "")}</strong></div><div className="admin-array-item__actions"><button type="button" className="admin-icon-button" onClick={() => move(index, -1)}>↑</button><button type="button" className="admin-icon-button" onClick={() => move(index, 1)}>↓</button><button type="button" className="admin-icon-button" onClick={() => set("sections", project.sections.filter((x) => x._key !== section._key))}>×</button></div></div>
+          <SectionEditor slug={project.slug} section={section as AnySection} onChange={(value) => set("sections", project.sections.map((x) => x._key === section._key ? value : x) as ProjectSection[])} />
+        </div>)}</div>
+      </section>
+
+      <section className="admin-card admin-editor__section"><header><h2>SEO & publishing</h2></header><div className="admin-grid"><label className="admin-field"><span>SEO title</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>SEO description</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>Status</span><select value={project.status} onChange={(e) => set("status", e.target.value as EditableProject["status"])}><option value="draft">Draft</option><option value="published">Published</option></select></label><label className="admin-field"><span>Order</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></section>
+
+      <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <button type="button" className="admin-button admin-button--danger" onClick={remove}>Delete</button> : null}<button type="button" className="admin-button" onClick={() => window.open(project.id ? `/admin/preview/${project.id}` : `/projects/${project.slug}`, "_blank")}>Full preview</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "Saving…" : "Save now"}</button></div></div>
+    </div>
+
+    <aside className="admin-live-preview">
+      <header><div><strong>Live preview</strong><span>{project.id ? "Updates after autosave" : "Save the project to enable"}</span></div>{project.id ? <button className="admin-icon-button" type="button" onClick={() => setPreviewVersion((version) => version + 1)} aria-label="Refresh preview">↻</button> : null}</header>
+      {project.id ? <div className="admin-preview-frame"><iframe key={previewVersion} src={`/admin/preview/${project.id}?v=${previewVersion}`} title="Project live preview" /></div> : <div className="admin-preview-empty">Save this project once to start live preview.</div>}
+    </aside>
+  </div>;
 }

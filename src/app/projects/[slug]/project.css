@@ -6,6 +6,8 @@
   font-family: var(--font-rounded);
 }
 
+.case-page--preview { padding-top: 120px; }
+
 .case-layout {
   display: flex;
   width: min(900px, 100%);
