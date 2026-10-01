@@ -1,5 +1,3 @@
-import type { PortableTextBlock } from "@portabletext/types";
-
 export type ProjectAsset = {
   src: string;
   alt: string;
@@ -12,7 +10,7 @@ export type ProjectFact = {
   value: string;
 };
 
-export type ProjectBody = string[] | PortableTextBlock[];
+export type ProjectBody = string[];
 
 export type ProjectContentSection = {
   _key: string;

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import ProjectImage from "@/components/project/ProjectImage";
 import ProjectNavigation from "@/components/project/ProjectNavigation";
 import ProjectSections from "@/components/project/ProjectSections";
-import { getProject, getProjectSlugs } from "@/sanity/projects";
+import { getProject, getProjectSlugs } from "@/cms/projects";
 import type { ProjectSection } from "@/sanity/types";
 import "./project.css";
 
@@ -96,4 +96,3 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     </main>
   );
 }
-

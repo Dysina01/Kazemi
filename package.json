@@ -9,16 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@portabletext/react": "^8.0.1",
-    "@portabletext/types": "^4.0.2",
-    "@sanity/image-url": "^2.1.1",
-    "@sanity/vision": "^6.17.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "motion": "^13.2.0",
     "next": "16.3.5",
-    "next-sanity": "^13.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "sanity": "^6.17.0"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
