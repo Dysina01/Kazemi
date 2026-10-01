@@ -5,9 +5,9 @@ import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "
 import { useEffect, useState, type CSSProperties } from "react";
 
 const projects = [
-  { title: "Project-1", type: "App/Website", number: "01", theme: "violet" },
-  { title: "Project-2", type: "App/Website", number: "02", theme: "blue" },
-  { title: "Project-3", type: "App/Website", number: "03", theme: "graphite" },
+  { title: "Project-1", type: "App/Website", number: "01", theme: "violet", href: "/projects/designing-a-portfolio" },
+  { title: "Project-2", type: "App/Website", number: "02", theme: "blue", href: "#works" },
+  { title: "Project-3", type: "App/Website", number: "03", theme: "graphite", href: "#works" },
 ];
 
 const thoughts = [
@@ -198,7 +198,7 @@ function Works() {
     <section className="works" id="works">
       <div data-reveal="soft"><SectionTitle title="PROJECTS" subtitle="Some of my Works" /></div>
       <div className="project-grid">{projects.map((project, i) => (
-        <m.a href="#works" className="project-card" data-reveal="card" style={{ "--reveal-delay": `${i * 90}ms` } as CSSProperties} key={project.number} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .45, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
+        <m.a href={project.href} className="project-card" data-reveal="card" style={{ "--reveal-delay": `${i * 90}ms` } as CSSProperties} key={project.number} whileHover={reduceMotion ? undefined : { y: -8 }} whileTap={reduceMotion ? undefined : { scale: .985 }} transition={{ duration: .45, ease: [.22, 1, .36, 1] }} aria-label={`Open ${project.title}`}>
           <span className={`project-cover project-art theme-${project.theme}`}>
             <span className="project-art-grid" />
             <span className="project-art-orb" />
@@ -276,7 +276,10 @@ export default function Home() {
     let frame = 0;
     let previous = window.scrollY > 80;
 
-    setScrolled(previous);
+    frame = window.requestAnimationFrame(() => {
+      setScrolled(previous);
+      frame = 0;
+    });
 
     const updateHeader = () => {
       if (frame) return;
