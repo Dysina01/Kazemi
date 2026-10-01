@@ -83,6 +83,17 @@ export async function reorderProjects(ids: string[]) {
   return { ok: true };
 }
 
+export async function saveSiteContent(payload: string) {
+  const supabase = await requireAdmin();
+  const content = JSON.parse(payload) as Record<string, unknown>;
+  const { error } = await supabase.from("site_settings").upsert({
+    id: "home", content, updated_at: new Date().toISOString(),
+  }, { onConflict: "id" });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

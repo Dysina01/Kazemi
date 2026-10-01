@@ -46,3 +46,17 @@ export async function getProjectSlugs(): Promise<string[]> {
   if (error) return fallbackProjects.map((project) => project.slug);
   return Array.from(new Set([...(data || []).map(({ slug }) => slug), ...fallbackProjects.map((p) => p.slug)]));
 }
+
+export type HomepageProject = Pick<ProjectRecord, "id" | "slug" | "title" | "category" | "hero">;
+
+export const getHomepageProjects = cache(async (): Promise<HomepageProject[]> => {
+  const { data, error } = await publicClient.from("projects").select("id,slug,title,category,hero")
+    .eq("status", "published").order("sort_order").limit(3);
+  if (error || !data?.length) {
+    return fallbackProjects.slice(0, 3).map((project, index) => ({
+      id: `fallback-${index}`, slug: project.slug, title: project.title,
+      category: project.category, hero: project.hero,
+    }));
+  }
+  return data as HomepageProject[];
+});
