@@ -123,6 +123,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   const [versionsLoaded, setVersionsLoaded] = useState(false);
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [restoringVersion, setRestoringVersion] = useState<string | null>(null);
+  const [templateChosen, setTemplateChosen] = useState(Boolean(initialProject.id || initialProject.sections.length || initialProject.facts.length));
   const [draggedKey, setDraggedKey] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [pending, startTransition] = useTransition();
@@ -147,6 +148,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     setProject((current) => ({ ...current, ...content }));
     setExpandedSectionKey(content.sections[0]?._key || null);
     setSelectedSectionKey(content.sections[0]?._key || null);
+    setTemplateChosen(true);
     setActiveStep(id === "blank" ? 0 : 2);
   }
   const addSection = (type: ProjectSection["_type"]) => {
@@ -263,7 +265,9 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
 
   return <div className={`admin-editor-shell ${previewOpen && project.id ? "has-preview" : ""}`}>
     <div className="admin-editor">
-      {!project.id ? <section className="admin-card admin-template-picker"><header><div><span>شروع سریع</span><h2>چه نوع پروژه‌ای می‌سازی؟</h2><p>یک ساختار آماده انتخاب کن؛ همه بخش‌ها بعداً قابل تغییرند.</p></div></header><div className="admin-template-grid">{templates.map((template) => <button type="button" onClick={() => applyTemplate(template.id)} key={template.id}><i>{template.mark}</i><strong>{template.title}</strong><span>{template.description}</span></button>)}</div></section> : null}
+      {!project.id && !templateChosen ? <section className="admin-card admin-template-picker"><header><div><span>شروع سریع</span><h2>مسیر ساخت پروژه را انتخاب کن</h2><p>ساختار مناسب پروژه را آماده می‌کنیم؛ همه بخش‌ها بعداً قابل تغییرند.</p></div><i className="admin-template-picker__orb">✦</i></header><div className="admin-template-grid">{templates.map((template) => <button type="button" data-template={template.id} onClick={() => applyTemplate(template.id)} key={template.id}><div className="admin-template-visual"><i>{template.mark}</i><span /><span /><span /></div><strong>{template.title}</strong><span>{template.description}</span><em>انتخاب قالب ←</em></button>)}</div></section> : null}
+      {!project.id && templateChosen ? <div className="admin-template-selected"><div><i>✓</i><span><strong>ساختار اولیه آماده است</strong><small>حالا اطلاعات پروژه را کامل کن.</small></span></div><button type="button" onClick={() => setTemplateChosen(false)}>تغییر قالب</button></div> : null}
+      {templateChosen ? <>
       <nav className="admin-editor-steps" aria-label="مراحل ساخت پروژه">{["اطلاعات کلی", "تصاویر و مشخصات", "محتوای پروژه", "بررسی و انتشار"].map((label, index) => <button type="button" className={activeStep === index ? "is-active" : ""} onClick={() => { setActiveStep(index); if (index === 3 && project.id && !versionsLoaded) void loadVersions(); }} key={label}><i>{index + 1}</i><span>{label}</span></button>)}</nav>
       <section className="admin-completion" aria-label={`پیشرفت پروژه ${completion} درصد`}><div><strong>{completion}٪</strong><span>{completion === 100 ? "آماده انتشار" : `${completionItems.filter((item) => !item.done).length} مورد تا تکمیل پروژه`}</span></div><div className="admin-completion__track"><i style={{ width: `${completion}%` }} /></div></section>
 
@@ -314,6 +318,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
       </section>
 
       <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <details className="admin-more-menu admin-more-menu--up"><summary aria-label="کارهای بیشتر">•••</summary><div><button className="is-danger" type="button" onClick={remove}>حذف کامل پروژه</button></div></details> : null}<button type="button" className="admin-button" disabled={!project.id} onClick={() => { setPreviewOpen((open) => !open); setPreviewVersion((version) => version + 1); }}>{previewOpen ? "بستن پیش‌نمایش" : "دیدن پیش‌نمایش"}</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "در حال ذخیره…" : project.status === "published" ? "ذخیره و انتشار" : "ذخیره پیش‌نویس"}</button></div></div>
+      </> : null}
     </div>
 
     {previewOpen && project.id ? <section className="admin-live-preview">
