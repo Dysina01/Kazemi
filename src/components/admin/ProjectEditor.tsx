@@ -5,18 +5,26 @@ import { useRouter } from "next/navigation";
 import type { ProjectAsset, ProjectSection } from "@/sanity/types";
 import type { ProjectRecord } from "@/cms/projects";
 import { createClient } from "@/lib/supabase/client";
-import { deleteProject, saveProject } from "@/app/admin/actions";
+import { deleteProject, getProjectVersions, restoreProjectVersion, saveProject } from "@/app/admin/actions";
 import MediaPicker from "./MediaPicker";
 
 type EditableProject = ProjectRecord;
 type AnySection = ProjectSection & Record<string, unknown>;
 type PreviewDevice = "desktop" | "tablet" | "mobile";
+type ProjectVersion = { id: string; label: string; created_at: string };
+type TemplateId = "product" | "visual" | "short" | "blank";
 
 const sectionLabels: Record<ProjectSection["_type"], string> = {
   contentSection: "متن و تصویر", gallerySection: "گالری تصاویر", metricsSection: "نتایج و آمار",
   quoteSection: "نقل‌قول", beforeAfterSection: "قبل و بعد",
 };
 const previewWidths: Record<PreviewDevice, number> = { desktop: 1440, tablet: 768, mobile: 390 };
+const templates: Array<{ id: TemplateId; title: string; description: string; mark: string }> = [
+  { id: "product", title: "کیس‌استادی محصول", description: "مسئله، فرایند، نتایج و آمار", mark: "01" },
+  { id: "visual", title: "پروژه بصری", description: "تمرکز روی تصاویر و قبل/بعد", mark: "02" },
+  { id: "short", title: "پروژه کوتاه", description: "روایت جمع‌وجور برای پروژه‌های سبک", mark: "03" },
+  { id: "blank", title: "شروع از صفر", description: "بدون سکشن از پیش‌ساخته", mark: "＋" },
+];
 
 function sectionSummary(section: ProjectSection) {
   if (section._type === "contentSection") return section.heading || section.label || "سکشن متنی بدون عنوان";
@@ -36,6 +44,25 @@ function sectionThumbnail(section: ProjectSection) {
 const emptyAsset = (): ProjectAsset => ({ src: "", alt: "", width: 1600, height: 1000 });
 const uid = () => crypto.randomUUID();
 const toSlug = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+function templateContent(id: TemplateId): Pick<EditableProject, "facts" | "sections"> {
+  const content = (slug: string, label: string, heading: string) => ({
+    _key: uid(), _type: "contentSection" as const, id: slug, label, heading, body: [""], showInNavigation: true,
+  });
+  if (id === "product") return {
+    facts: [{ label: "نقش", value: "" }, { label: "زمان", value: "" }, { label: "تیم", value: "" }, { label: "پلتفرم", value: "" }],
+    sections: [content("overview", "Overview", "معرفی پروژه"), content("problem", "Problem", "مسئله‌ای که حل کردیم"), content("process", "Process", "فرایند طراحی"), { _key: uid(), _type: "metricsSection", id: "results", label: "Results", heading: "نتایج پروژه", showInNavigation: true, items: [{ _key: uid(), label: "شاخص اول", value: "۰٪" }, { _key: uid(), label: "شاخص دوم", value: "۰٪" }] }, content("outcome", "Outcome", "جمع‌بندی و دستاوردها")],
+  };
+  if (id === "visual") return {
+    facts: [{ label: "نوع پروژه", value: "UI Design" }, { label: "سال", value: "" }],
+    sections: [content("overview", "Overview", "درباره پروژه"), { _key: uid(), _type: "gallerySection", items: [] }, { _key: uid(), _type: "beforeAfterSection", id: "before-after", label: "Comparison", heading: "قبل و بعد", showInNavigation: true, before: emptyAsset(), after: emptyAsset() }],
+  };
+  if (id === "short") return {
+    facts: [{ label: "نقش", value: "" }, { label: "سال", value: "" }],
+    sections: [content("overview", "Overview", "معرفی کوتاه پروژه"), { _key: uid(), _type: "gallerySection", items: [] }, { _key: uid(), _type: "quoteSection", quote: "", attribution: "" }],
+  };
+  return { facts: [], sections: [] };
+}
 
 export const emptyProject = (): EditableProject => ({
   id: "", slug: "", title: "", category: "", year: String(new Date().getFullYear()),
@@ -98,6 +125,10 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   const [selectedSectionKey, setSelectedSectionKey] = useState<string | null>(null);
   const [expandedSectionKey, setExpandedSectionKey] = useState<string | null>(null);
   const [removedSection, setRemovedSection] = useState<{ section: ProjectSection; index: number } | null>(null);
+  const [versions, setVersions] = useState<ProjectVersion[]>([]);
+  const [versionsLoaded, setVersionsLoaded] = useState(false);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [restoringVersion, setRestoringVersion] = useState<string | null>(null);
   const [draggedKey, setDraggedKey] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [pending, startTransition] = useTransition();
@@ -105,7 +136,25 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   const savedSnapshot = useRef(JSON.stringify(initialProject));
   const previewRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const visibleSections = project.sections.filter((section) => !section.hidden);
+  const completionItems = [
+    { label: "نام و توضیحات پروژه", done: Boolean(project.title.trim() && project.description.trim()) },
+    { label: "دسته‌بندی و سال", done: Boolean(project.category.trim() && project.year.trim()) },
+    { label: "تصویر اصلی", done: Boolean(project.hero.src) },
+    { label: "حداقل یک مشخصه کامل", done: project.facts.some((fact) => fact.label.trim() && fact.value.trim()) },
+    { label: "حداقل یک سکشن فعال", done: visibleSections.length > 0 },
+    { label: "عنوان و توضیحات گوگل", done: Boolean(project.seo?.title?.trim() && project.seo?.description?.trim()) },
+  ];
+  const completion = Math.round((completionItems.filter((item) => item.done).length / completionItems.length) * 100);
   const set = <K extends keyof EditableProject>(key: K, value: EditableProject[K]) => setProject((current) => ({ ...current, [key]: value }));
+  function applyTemplate(id: TemplateId) {
+    if ((project.sections.length || project.facts.length) && !confirm("سکشن‌ها و مشخصات فعلی با قالب جدید جایگزین شوند؟")) return;
+    const content = templateContent(id);
+    setProject((current) => ({ ...current, ...content }));
+    setExpandedSectionKey(content.sections[0]?._key || null);
+    setSelectedSectionKey(content.sections[0]?._key || null);
+    setActiveStep(id === "blank" ? 0 : 2);
+  }
   const addSection = (type: ProjectSection["_type"]) => {
     const base = { _key: uid(), _type: type };
     const section = type === "contentSection" ? { ...base, id: `section-${project.sections.length + 1}`, label: "Section", heading: "", body: [""], showInNavigation: true }
@@ -158,7 +207,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     setSaveState("saving");
     if (showMessage) setMessage("");
     const snapshot = JSON.stringify(project);
-    const result = await saveProject(snapshot);
+    const result = await saveProject(snapshot, showMessage);
     if (!result.ok) {
       setSaveState("error");
       setMessage(result.error || "Save failed");
@@ -166,10 +215,35 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     }
     savedSnapshot.current = snapshot;
     setSaveState("saved");
+    if (showMessage) setVersionsLoaded(false);
     if (showMessage) setMessage("Saved successfully");
     if (!project.id && result.id) router.replace(`/admin/projects/${result.id}`);
     if (showMessage) router.refresh();
   }, [project, router]);
+  const loadVersions = useCallback(async () => {
+    if (!project.id) return;
+    setVersionsLoading(true);
+    const result = await getProjectVersions(project.id);
+    if (result.ok) setVersions(result.versions as ProjectVersion[]);
+    else setMessage(result.error || "تاریخچه دریافت نشد");
+    setVersionsLoaded(true);
+    setVersionsLoading(false);
+  }, [project.id]);
+  async function restoreVersion(versionId: string) {
+    if (!project.id || !confirm("این نسخه بازیابی شود؟ وضعیت فعلی هم به تاریخچه اضافه می‌شود.")) return;
+    setRestoringVersion(versionId);
+    const result = await restoreProjectVersion(project.id, versionId, JSON.stringify(project));
+    if (result.ok && result.project) {
+      const restored = result.project as EditableProject;
+      setProject(restored);
+      savedSnapshot.current = JSON.stringify(restored);
+      setSaveState("saved");
+      setMessage("نسخه با موفقیت بازیابی شد");
+      setPreviewVersion((version) => version + 1);
+      setVersionsLoaded(false);
+    } else setMessage(result.error || "بازیابی انجام نشد");
+    setRestoringVersion(null);
+  }
   useEffect(() => {
     if (!project.id) return;
     const snapshot = JSON.stringify(project);
@@ -195,7 +269,9 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
 
   return <div className={`admin-editor-shell ${previewOpen && project.id ? "has-preview" : ""}`}>
     <div className="admin-editor">
-      <nav className="admin-editor-steps" aria-label="مراحل ساخت پروژه">{["اطلاعات کلی", "تصاویر و مشخصات", "محتوای پروژه", "بررسی و انتشار"].map((label, index) => <button type="button" className={activeStep === index ? "is-active" : ""} onClick={() => setActiveStep(index)} key={label}><i>{index + 1}</i><span>{label}</span></button>)}</nav>
+      {!project.id ? <section className="admin-card admin-template-picker"><header><div><span>شروع سریع</span><h2>چه نوع پروژه‌ای می‌سازی؟</h2><p>یک ساختار آماده انتخاب کن؛ همه بخش‌ها بعداً قابل تغییرند.</p></div></header><div className="admin-template-grid">{templates.map((template) => <button type="button" onClick={() => applyTemplate(template.id)} key={template.id}><i>{template.mark}</i><strong>{template.title}</strong><span>{template.description}</span></button>)}</div></section> : null}
+      <nav className="admin-editor-steps" aria-label="مراحل ساخت پروژه">{["اطلاعات کلی", "تصاویر و مشخصات", "محتوای پروژه", "بررسی و انتشار"].map((label, index) => <button type="button" className={activeStep === index ? "is-active" : ""} onClick={() => { setActiveStep(index); if (index === 3 && project.id && !versionsLoaded) void loadVersions(); }} key={label}><i>{index + 1}</i><span>{label}</span></button>)}</nav>
+      <section className="admin-completion" aria-label={`پیشرفت پروژه ${completion} درصد`}><div><strong>{completion}٪</strong><span>{completion === 100 ? "آماده انتشار" : `${completionItems.filter((item) => !item.done).length} مورد تا تکمیل پروژه`}</span></div><div className="admin-completion__track"><i style={{ width: `${completion}%` }} /></div></section>
 
       <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 0 ? "is-active" : ""}`}>
         <header><div><h2>اطلاعات کلی</h2><small>اول اطلاعات اصلی پروژه را وارد کن.</small></div></header>
@@ -231,10 +307,17 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
           {expanded ? <div className="admin-section-card__editor"><SectionEditor slug={project.slug} section={section as AnySection} onChange={(value) => set("sections", project.sections.map((x) => x._key === section._key ? value : x) as ProjectSection[])} /></div> : null}
         </div>; })}</div>
         {removedSection ? <div className="admin-undo"><span>سکشن حذف شد.</span><button type="button" onClick={undoRemove}>برگرداندن</button></div> : null}
-        <footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(1)}>مرحله قبل</button><button type="button" className="admin-button admin-button--primary" onClick={() => setActiveStep(3)}>بررسی نهایی</button></footer>
+        <footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(1)}>مرحله قبل</button><button type="button" className="admin-button admin-button--primary" onClick={() => { setActiveStep(3); if (project.id && !versionsLoaded) void loadVersions(); }}>بررسی نهایی</button></footer>
       </section>
 
-      <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 3 ? "is-active" : ""}`}><header><div><h2>بررسی و انتشار</h2><small>پیش‌نمایش را ببین و بعد پروژه را منتشر کن.</small></div></header><div className="admin-publish-choice"><button type="button" className={project.status === "draft" ? "is-active" : ""} onClick={() => set("status", "draft")}><strong>پیش‌نویس</strong><span>فقط در پنل دیده می‌شود</span></button><button type="button" className={project.status === "published" ? "is-active" : ""} onClick={() => set("status", "published")}><strong>منتشرشده</strong><span>در سایت نمایش داده می‌شود</span></button></div><details className="admin-advanced-fields"><summary>تنظیمات سئو و نمایش</summary><div className="admin-grid"><label className="admin-field"><span>عنوان گوگل</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>توضیحات گوگل</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>ترتیب نمایش</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></details><footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(2)}>مرحله قبل</button></footer></section>
+      <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 3 ? "is-active" : ""}`}>
+        <header><div><h2>بررسی و انتشار</h2><small>پیش‌نمایش را ببین و بعد پروژه را منتشر کن.</small></div><div className={`admin-completion-badge ${completion === 100 ? "is-complete" : ""}`}>{completion}٪ کامل</div></header>
+        <div className="admin-publish-checklist">{completionItems.map((item) => <div className={item.done ? "is-done" : ""} key={item.label}><i>{item.done ? "✓" : ""}</i><span>{item.label}</span></div>)}</div>
+        <div className="admin-publish-choice"><button type="button" className={project.status === "draft" ? "is-active" : ""} onClick={() => set("status", "draft")}><strong>پیش‌نویس</strong><span>فقط در پنل دیده می‌شود</span></button><button type="button" className={project.status === "published" ? "is-active" : ""} onClick={() => set("status", "published")}><strong>منتشرشده</strong><span>در سایت نمایش داده می‌شود</span></button></div>
+        <details className="admin-advanced-fields"><summary>تنظیمات سئو و نمایش</summary><div className="admin-grid"><label className="admin-field"><span>عنوان گوگل</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>توضیحات گوگل</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>ترتیب نمایش</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></details>
+        {project.id ? <section className="admin-version-history"><header><div><h3>تاریخچه نسخه‌ها</h3><p>نسخه‌ها با ذخیره دستی یا انتشار ساخته می‌شوند.</p></div><button type="button" className="admin-icon-button" onClick={() => { setVersionsLoaded(false); void loadVersions(); }} aria-label="تازه‌سازی تاریخچه">↻</button></header>{versionsLoading ? <div className="admin-version-empty">در حال دریافت نسخه‌ها…</div> : versions.length ? <div className="admin-version-list">{versions.map((version, index) => <article key={version.id}><i>{index + 1}</i><div><strong>{version.label}</strong><span>{new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(version.created_at))}</span></div><button type="button" onClick={() => void restoreVersion(version.id)} disabled={restoringVersion === version.id}>{restoringVersion === version.id ? "در حال بازیابی…" : "بازیابی"}</button></article>)}</div> : <div className="admin-version-empty">هنوز نسخه‌ای ثبت نشده؛ یک‌بار پروژه را دستی ذخیره کن.</div>}</section> : null}
+        <footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(2)}>مرحله قبل</button></footer>
+      </section>
 
       <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <details className="admin-more-menu admin-more-menu--up"><summary aria-label="کارهای بیشتر">•••</summary><div><button className="is-danger" type="button" onClick={remove}>حذف کامل پروژه</button></div></details> : null}<button type="button" className="admin-button" disabled={!project.id} onClick={() => { setPreviewOpen((open) => !open); setPreviewVersion((version) => version + 1); }}>{previewOpen ? "بستن پیش‌نمایش" : "دیدن پیش‌نمایش"}</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "در حال ذخیره…" : project.status === "published" ? "ذخیره و انتشار" : "ذخیره پیش‌نویس"}</button></div></div>
     </div>
