@@ -7,6 +7,8 @@
 }
 
 .case-page--preview { padding-top: 64px; }
+.case-preview-target { border-radius: 24px; transition: box-shadow .35s ease, background .35s ease; }
+.case-preview-target.is-cms-focused { background:rgba(101,88,232,.055); box-shadow:0 0 0 4px rgba(101,88,232,.2); }
 
 .case-layout {
   display: flex;

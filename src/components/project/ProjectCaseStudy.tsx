@@ -2,11 +2,12 @@ import Link from "next/link";
 import ProjectImage from "./ProjectImage";
 import ProjectNavigation from "./ProjectNavigation";
 import ProjectSections from "./ProjectSections";
+import PreviewBridge from "./PreviewBridge";
 import type { Project, ProjectSection } from "@/sanity/types";
 
 function navigationItems(sections: ProjectSection[]) {
   return sections.flatMap((section) => {
-    if ("showInNavigation" in section && section.showInNavigation && section.id && "label" in section && section.label) {
+    if (!section.hidden && "showInNavigation" in section && section.showInNavigation && section.id && "label" in section && section.label) {
       return [{ id: section.id, label: section.label }];
     }
     return [];
@@ -15,6 +16,7 @@ function navigationItems(sections: ProjectSection[]) {
 
 export default function ProjectCaseStudy({ project, preview = false }: { project: Project; preview?: boolean }) {
   return <main className={`case-page ${preview ? "case-page--preview" : ""}`}>
+    {preview ? <PreviewBridge /> : null}
     <ProjectNavigation items={navigationItems(project.sections)} />
     <article className="case-layout">
       <section className="case-hero">

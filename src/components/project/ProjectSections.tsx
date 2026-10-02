@@ -12,7 +12,7 @@ import type {
 
 function ContentSection({ section }: { section: ProjectContentSection }) {
   return (
-    <section className="case-section" id={section.id}>
+    <section className="case-section case-preview-target" id={section.id} data-project-section-key={section._key}>
       <header className="case-section__header">
         <span>{section.label}</span>
         <h2>{section.heading}</h2>
@@ -25,7 +25,7 @@ function ContentSection({ section }: { section: ProjectContentSection }) {
 
 function GallerySection({ section }: { section: ProjectGallerySection }) {
   return (
-    <section className="case-gallery" aria-label="Project gallery">
+    <section className="case-gallery case-preview-target" aria-label="Project gallery" data-project-section-key={section._key}>
       {section.items.map((item) => (
         <figure className={`case-gallery__item case-gallery__item--${item.size}`} key={item._key}>
           <Image
@@ -49,7 +49,7 @@ function GallerySection({ section }: { section: ProjectGallerySection }) {
 
 function MetricsSection({ section }: { section: ProjectMetricsSection }) {
   return (
-    <section className="case-section" id={section.id}>
+    <section className="case-section case-preview-target" id={section.id} data-project-section-key={section._key}>
       {section.heading ? (
         <header className="case-section__header">
           {section.label ? <span>{section.label}</span> : null}
@@ -70,7 +70,7 @@ function MetricsSection({ section }: { section: ProjectMetricsSection }) {
 
 function QuoteSection({ section }: { section: ProjectQuoteSection }) {
   return (
-    <blockquote className="case-quote" id={section.id}>
+    <blockquote className="case-quote case-preview-target" id={section.id} data-project-section-key={section._key}>
       <p>{section.quote}</p>
       {section.attribution ? <cite>{section.attribution}</cite> : null}
     </blockquote>
@@ -79,7 +79,7 @@ function QuoteSection({ section }: { section: ProjectQuoteSection }) {
 
 function BeforeAfterSection({ section }: { section: ProjectBeforeAfterSection }) {
   return (
-    <section className="case-section" id={section.id}>
+    <section className="case-section case-preview-target" id={section.id} data-project-section-key={section._key}>
       {section.heading ? (
         <header className="case-section__header">
           {section.label ? <span>{section.label}</span> : null}
@@ -95,7 +95,7 @@ function BeforeAfterSection({ section }: { section: ProjectBeforeAfterSection })
 }
 
 export default function ProjectSections({ sections }: { sections: ProjectSection[] }) {
-  return sections.map((section) => {
+  return sections.filter((section) => !section.hidden).map((section) => {
     switch (section._type) {
       case "contentSection":
         return <ContentSection key={section._key} section={section} />;

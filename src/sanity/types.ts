@@ -12,8 +12,12 @@ export type ProjectFact = {
 
 export type ProjectBody = string[];
 
-export type ProjectContentSection = {
+type ProjectSectionBase = {
   _key: string;
+  hidden?: boolean;
+};
+
+export type ProjectContentSection = ProjectSectionBase & {
   _type: "contentSection";
   id: string;
   label: string;
@@ -23,8 +27,7 @@ export type ProjectContentSection = {
   media?: ProjectAsset;
 };
 
-export type ProjectGallerySection = {
-  _key: string;
+export type ProjectGallerySection = ProjectSectionBase & {
   _type: "gallerySection";
   items: Array<ProjectAsset & {
     _key: string;
@@ -34,8 +37,7 @@ export type ProjectGallerySection = {
   }>;
 };
 
-export type ProjectMetricsSection = {
-  _key: string;
+export type ProjectMetricsSection = ProjectSectionBase & {
   _type: "metricsSection";
   id?: string;
   label?: string;
@@ -44,16 +46,14 @@ export type ProjectMetricsSection = {
   items: Array<{ _key: string; label: string; value: string }>;
 };
 
-export type ProjectQuoteSection = {
-  _key: string;
+export type ProjectQuoteSection = ProjectSectionBase & {
   _type: "quoteSection";
   id?: string;
   quote: string;
   attribution?: string;
 };
 
-export type ProjectBeforeAfterSection = {
-  _key: string;
+export type ProjectBeforeAfterSection = ProjectSectionBase & {
   _type: "beforeAfterSection";
   id?: string;
   label?: string;
