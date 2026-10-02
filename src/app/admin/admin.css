@@ -39,10 +39,11 @@
 .admin-filter-tabs button.is-active { background:#fff; color:var(--admin-text); box-shadow:0 1px 5px rgba(20,20,30,.08); }
 .admin-library-saving { color:var(--admin-muted); font-size:12px; }
 .admin-project-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
-.admin-project-card { overflow:hidden; border:1px solid var(--admin-line); border-radius:17px; background:#fff; content-visibility:auto; contain-intrinsic-size:420px; transition:.2s ease; }
+.admin-project-card { position:relative; overflow:visible; border:1px solid var(--admin-line); border-radius:17px; background:#fff; transition:.2s ease; }
+.admin-project-card:has(.admin-more-menu[open]) { z-index:30; }
 .admin-project-card:hover { transform:translateY(-2px); box-shadow:0 14px 35px rgba(25,25,40,.08); }
 .admin-project-card.is-dragging { opacity:.5; transform:scale(.98); }
-.admin-project-card__media { position:relative; aspect-ratio:16/10; overflow:hidden; background:#ebedf1; }
+.admin-project-card__media { position:relative; aspect-ratio:16/10; overflow:hidden; border-radius:16px 16px 0 0; background:#ebedf1; }
 .admin-project-card__media>a { position:absolute; inset:0; display:grid; place-items:center; color:var(--admin-muted); text-decoration:none; }
 .admin-project-card__media img { object-fit:cover; }
 .admin-project-card__media .admin-status { position:absolute; top:12px; right:12px; }
@@ -57,7 +58,7 @@
 .admin-more-menu { position:relative; flex:0 0 auto; }
 .admin-more-menu summary { display:grid; width:40px; height:38px; place-items:center; border:1px solid var(--admin-line); border-radius:11px; background:#fff; cursor:pointer; list-style:none; letter-spacing:1px; }
 .admin-more-menu summary::-webkit-details-marker { display:none; }
-.admin-more-menu>div { position:absolute; inset:calc(100% + 7px) auto auto 0; z-index:20; width:180px; overflow:hidden; padding:6px; border:1px solid var(--admin-line); border-radius:12px; background:#fff; box-shadow:0 16px 45px rgba(20,20,30,.14); }
+.admin-more-menu>div { position:absolute; inset:calc(100% + 7px) auto auto 0; z-index:40; width:200px; overflow:hidden; padding:7px; border:1px solid var(--admin-line); border-radius:12px; background:#fff; box-shadow:0 16px 45px rgba(20,20,30,.14); }
 .admin-more-menu>div button { width:100%; border:0; border-radius:8px; padding:10px; background:transparent; color:var(--admin-text); text-align:right; font:inherit; font-size:12px; cursor:pointer; }
 .admin-more-menu>div button:hover { background:#f3f3f6; }
 .admin-more-menu>div button.is-danger { color:#c62e3b; }
