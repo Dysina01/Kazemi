@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 type CursorState = {
   label: string;
@@ -75,6 +76,8 @@ function getCursorState(target: Element | null) {
 }
 
 export default function CustomCursor() {
+  const pathname = usePathname();
+  const disabled = pathname.startsWith("/admin");
   const cursorRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef({ x: -100, y: -100 });
   const currentRef = useRef({ x: -100, y: -100 });
@@ -82,6 +85,10 @@ export default function CustomCursor() {
   const [state, setState] = useState(DEFAULT_STATE);
 
   useEffect(() => {
+    if (disabled) {
+      document.documentElement.classList.remove("cursor-enabled");
+      return;
+    }
     const finePointer = window.matchMedia("(pointer: fine)").matches;
     if (!finePointer) return;
 
@@ -124,7 +131,9 @@ export default function CustomCursor() {
       document.documentElement.removeEventListener("mouseleave", onLeave);
       document.documentElement.removeEventListener("mouseenter", onEnter);
     };
-  }, []);
+  }, [disabled]);
+
+  if (disabled) return null;
 
   return (
     <div

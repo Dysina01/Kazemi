@@ -3,8 +3,10 @@
 import { createClient } from "./client";
 
 export type MediaFile = { name: string; path: string; url: string; size: number; mimetype: string; createdAt: string };
+let mediaCache: MediaFile[] | null = null;
 
-export async function listAllMedia() {
+export async function listAllMedia(force = false) {
+  if (mediaCache && !force) return mediaCache;
   const supabase = createClient();
   const files: MediaFile[] = [];
   async function walk(folder = "", depth = 0): Promise<void> {
@@ -19,7 +21,8 @@ export async function listAllMedia() {
     }));
   }
   await walk();
-  return files.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  mediaCache = files.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return mediaCache;
 }
 
 export async function uploadMedia(files: File[], folder = "library") {
@@ -37,4 +40,5 @@ export async function uploadMedia(files: File[], folder = "library") {
 export async function removeMedia(path: string) {
   const { error } = await createClient().storage.from("project-media").remove([path]);
   if (error) throw error;
+  mediaCache = mediaCache?.filter((file) => file.path !== path) || null;
 }

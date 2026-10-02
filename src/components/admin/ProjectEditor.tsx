@@ -70,6 +70,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   const [message, setMessage] = useState("");
   const [saveState, setSaveState] = useState<"saved" | "unsaved" | "saving" | "error">("saved");
   const [previewVersion, setPreviewVersion] = useState(0);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [draggedKey, setDraggedKey] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [pending, startTransition] = useTransition();
@@ -109,7 +110,6 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     }
     savedSnapshot.current = snapshot;
     setSaveState("saved");
-    setPreviewVersion((version) => version + 1);
     if (showMessage) setMessage("Saved successfully");
     if (!project.id && result.id) router.replace(`/admin/projects/${result.id}`);
     if (showMessage) router.refresh();
@@ -165,12 +165,12 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
 
       <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 3 ? "is-active" : ""}`}><header><div><h2>بررسی و انتشار</h2><small>پیش‌نمایش را ببین و بعد پروژه را منتشر کن.</small></div></header><div className="admin-publish-choice"><button type="button" className={project.status === "draft" ? "is-active" : ""} onClick={() => set("status", "draft")}><strong>پیش‌نویس</strong><span>فقط در پنل دیده می‌شود</span></button><button type="button" className={project.status === "published" ? "is-active" : ""} onClick={() => set("status", "published")}><strong>منتشرشده</strong><span>در سایت نمایش داده می‌شود</span></button></div><details className="admin-advanced-fields"><summary>تنظیمات سئو و نمایش</summary><div className="admin-grid"><label className="admin-field"><span>عنوان گوگل</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>توضیحات گوگل</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>ترتیب نمایش</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></details><footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(2)}>مرحله قبل</button></footer></section>
 
-      <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <details className="admin-more-menu admin-more-menu--up"><summary aria-label="کارهای بیشتر">•••</summary><div><button className="is-danger" type="button" onClick={remove}>حذف کامل پروژه</button></div></details> : null}<button type="button" className="admin-button" onClick={() => window.open(project.id ? `/admin/preview/${project.id}` : `/projects/${project.slug}`, "_blank")}>پیش‌نمایش</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "در حال ذخیره…" : project.status === "published" ? "ذخیره و انتشار" : "ذخیره پیش‌نویس"}</button></div></div>
+      <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <details className="admin-more-menu admin-more-menu--up"><summary aria-label="کارهای بیشتر">•••</summary><div><button className="is-danger" type="button" onClick={remove}>حذف کامل پروژه</button></div></details> : null}<button type="button" className="admin-button" disabled={!project.id} onClick={() => { setPreviewOpen((open) => !open); setPreviewVersion((version) => version + 1); }}>{previewOpen ? "بستن پیش‌نمایش" : "دیدن پیش‌نمایش"}</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "در حال ذخیره…" : project.status === "published" ? "ذخیره و انتشار" : "ذخیره پیش‌نویس"}</button></div></div>
     </div>
 
-    <aside className="admin-live-preview">
-      <header><div><strong>پیش‌نمایش زنده</strong><span>{project.id ? "بعد از ذخیره خودکار به‌روز می‌شود" : "ابتدا پروژه را ذخیره کن"}</span></div>{project.id ? <button className="admin-icon-button" type="button" onClick={() => setPreviewVersion((version) => version + 1)} aria-label="تازه‌سازی پیش‌نمایش">↻</button> : null}</header>
-      {project.id ? <div className="admin-preview-frame"><iframe key={previewVersion} src={`/admin/preview/${project.id}?v=${previewVersion}`} title="پیش‌نمایش زنده پروژه" /></div> : <div className="admin-preview-empty">بعد از اولین ذخیره، پیش‌نمایش اینجا نمایش داده می‌شود.</div>}
-    </aside>
+    {previewOpen && project.id ? <section className="admin-live-preview">
+      <header><div><strong>پیش‌نمایش پروژه</strong><span>نمایش واقعی و responsive صفحه پروژه</span></div><div className="admin-array-item__actions"><button className="admin-button" type="button" onClick={() => window.open(`/admin/preview/${project.id}`, "_blank")}>بازکردن تمام‌صفحه ↗</button><button className="admin-icon-button" type="button" onClick={() => setPreviewVersion((version) => version + 1)} aria-label="تازه‌سازی پیش‌نمایش">↻</button></div></header>
+      <div className="admin-preview-frame"><iframe key={previewVersion} src={`/admin/preview/${project.id}?v=${previewVersion}`} title="پیش‌نمایش پروژه" /></div>
+    </section> : null}
   </div>;
 }

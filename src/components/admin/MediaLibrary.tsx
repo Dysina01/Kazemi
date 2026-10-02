@@ -11,7 +11,8 @@ export default function MediaLibrary() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  async function refresh() { setLoading(true); try { setFiles(await listAllMedia()); } finally { setLoading(false); } }
+  const [copiedPath, setCopiedPath] = useState("");
+  async function refresh() { setLoading(true); try { setFiles(await listAllMedia(true)); } finally { setLoading(false); } }
   useEffect(() => {
     let active = true;
     void listAllMedia()
@@ -22,5 +23,22 @@ export default function MediaLibrary() {
   const visible = useMemo(() => files.filter((file) => file.name.toLowerCase().includes(search.toLowerCase())), [files, search]);
   async function upload(selected: FileList | null) { if (!selected?.length) return; setUploading(true); try { await uploadMedia(Array.from(selected)); await refresh(); } finally { setUploading(false); } }
   async function remove(file: MediaFile) { if (!confirm(`فایل «${file.name}» حذف شود؟ اگر در پروژه‌ای استفاده شده باشد، دیگر نمایش داده نمی‌شود.`)) return; await removeMedia(file.path); setFiles((items) => items.filter((item) => item.path !== file.path)); }
-  return <><div className="admin-library-toolbar admin-card"><label className="admin-search"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="جست‌وجوی تصاویر…" /></label><label className="admin-button admin-button--primary admin-upload-button">{uploading ? "در حال آپلود…" : "+ آپلود فایل"}<input type="file" multiple accept="image/*,video/mp4,video/webm" disabled={uploading} onChange={(event) => void upload(event.target.files)} /></label><span>{files.length.toLocaleString("fa-IR")} فایل</span></div>{loading ? <section className="admin-card admin-empty">در حال بارگذاری تصاویر…</section> : <section className="admin-media-grid">{visible.map((file) => <article className="admin-media-card" key={file.path}><div className="admin-media-card__preview">{file.mimetype.startsWith("image/") ? <Image src={file.url} alt="" fill sizes="(max-width: 800px) 50vw, 220px" /> : <div className="admin-video-file">ویدئو</div>}</div><div className="admin-media-card__meta"><strong dir="ltr" title={file.name}>{file.name}</strong><span>{formatBytes(file.size)} · {file.mimetype.split("/")[1]?.toUpperCase()}</span><div><button type="button" onClick={() => navigator.clipboard.writeText(file.url)}>کپی آدرس</button><button type="button" className="is-danger" onClick={() => void remove(file)}>حذف</button></div></div></article>)}</section>}</>;
+  async function copy(file: MediaFile) {
+    await navigator.clipboard.writeText(file.url);
+    setCopiedPath(file.path);
+    window.setTimeout(() => setCopiedPath(""), 1400);
+  }
+  return <>
+    <section className="admin-media-guide admin-card">
+      <div className="admin-panel-icon">?</div>
+      <div><h2>این بخش چه کاربردی دارد؟</h2><p>تصاویر را اینجا آپلود کن؛ بعد هنگام ویرایش پروژه یا صفحه اصلی، با گزینه «انتخاب از تصاویر» دوباره از آن‌ها استفاده کن.</p></div>
+      <ol><li><i>۱</i><span>فایل را آپلود کن</span></li><li><i>۲</i><span>پروژه را باز کن</span></li><li><i>۳</i><span>از کتابخانه انتخاب کن</span></li></ol>
+    </section>
+    <div className="admin-library-toolbar admin-card">
+      <label className="admin-search"><span>⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="جست‌وجوی تصاویر…" /></label>
+      <span className="admin-file-count">{files.length.toLocaleString("fa-IR")} فایل</span>
+      <label className="admin-button admin-button--primary admin-upload-button">{uploading ? "در حال آپلود…" : "+ افزودن تصویر"}<input type="file" multiple accept="image/*,video/mp4,video/webm" disabled={uploading} onChange={(event) => void upload(event.target.files)} /></label>
+    </div>
+    {loading ? <section className="admin-card admin-empty"><strong>در حال آماده‌کردن کتابخانه…</strong></section> : visible.length ? <section className="admin-media-grid">{visible.map((file) => <article className="admin-media-card" key={file.path}><div className="admin-media-card__preview">{file.mimetype.startsWith("image/") ? <Image src={file.url} alt="" fill sizes="(max-width: 800px) 50vw, 220px" /> : <div className="admin-video-file">ویدئو</div>}</div><div className="admin-media-card__meta"><strong dir="ltr" title={file.name}>{file.name}</strong><span>{formatBytes(file.size)} · {file.mimetype.split("/")[1]?.toUpperCase()}</span><div><button type="button" onClick={() => void copy(file)}>{copiedPath === file.path ? "کپی شد ✓" : "کپی آدرس"}</button><button type="button" className="is-danger" onClick={() => void remove(file)}>حذف</button></div></div></article>)}</section> : <section className="admin-card admin-empty"><strong>هنوز تصویری اینجا نیست</strong><span>با دکمه «افزودن تصویر» اولین فایل را آپلود کن.</span></section>}
+  </>;
 }
