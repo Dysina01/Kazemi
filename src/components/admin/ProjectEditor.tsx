@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ProjectAsset, ProjectSection } from "@/sanity/types";
 import type { ProjectRecord } from "@/cms/projects";
 import { createClient } from "@/lib/supabase/client";
-import { deleteProject, getProjectVersions, restoreProjectVersion, saveProject } from "@/app/admin/actions";
+import { deleteProject, getProjectVersions, publishProject, restoreProjectVersion, saveProject } from "@/app/admin/actions";
 import MediaPicker from "./MediaPicker";
 
 type EditableProject = ProjectRecord;
@@ -211,11 +211,12 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     }
     savedSnapshot.current = snapshot;
     setSaveState("saved");
+    if (previewOpen) setPreviewVersion((version) => version + 1);
     if (showMessage) setVersionsLoaded(false);
     if (showMessage) setMessage("Saved successfully");
     if (!project.id && result.id) router.replace(`/admin/projects/${result.id}`);
     if (showMessage) router.refresh();
-  }, [project, router]);
+  }, [previewOpen, project, router]);
   const loadVersions = useCallback(async () => {
     if (!project.id) return;
     setVersionsLoading(true);
@@ -260,6 +261,34 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     iframeRef.current?.contentWindow?.postMessage({ type: "cms:focus-section", key: selectedSectionKey }, window.location.origin);
   }, [previewOpen, previewVersion, selectedSectionKey]);
   function save() { startTransition(async () => persist(true)); }
+  function publish() {
+    startTransition(async () => {
+      setSaveState("saving");
+      setMessage("");
+      const snapshot = JSON.stringify(project);
+      const result = await publishProject(snapshot);
+      if (!result.ok) {
+        setSaveState("error");
+        setMessage(result.error || "انتشار انجام نشد");
+        return;
+      }
+      const savedId = project.id || result.id;
+      if (!savedId) {
+        setSaveState("error");
+        setMessage("شناسه پروژه دریافت نشد");
+        return;
+      }
+      const published: EditableProject = { ...project, id: savedId, status: "published" };
+      setProject(published);
+      savedSnapshot.current = JSON.stringify(published);
+      setSaveState("saved");
+      setMessage("نسخه جدید با موفقیت روی سایت منتشر شد");
+      setVersionsLoaded(false);
+      setPreviewVersion((version) => version + 1);
+      if (!project.id) router.replace(`/admin/projects/${savedId}`);
+      router.refresh();
+    });
+  }
   function remove() { if (!project.id || !confirm("این پروژه برای همیشه حذف شود؟")) return; startTransition(async () => { await deleteProject(project.id); }); }
   const statusLabel = saveState === "saving" ? "در حال ذخیره…" : saveState === "unsaved" ? "تغییرات ذخیره نشده" : saveState === "error" ? "ذخیره انجام نشد" : "همه تغییرات ذخیره شده";
 
@@ -311,13 +340,13 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
       <section className={`admin-card admin-editor__section admin-editor-step ${activeStep === 3 ? "is-active" : ""}`}>
         <header><div><h2>بررسی و انتشار</h2><small>پیش‌نمایش را ببین و بعد پروژه را منتشر کن.</small></div><div className={`admin-completion-badge ${completion === 100 ? "is-complete" : ""}`}>{completion}٪ کامل</div></header>
         <div className="admin-publish-checklist">{completionItems.map((item) => <div className={item.done ? "is-done" : ""} key={item.label}><i>{item.done ? "✓" : ""}</i><span>{item.label}</span></div>)}</div>
-        <div className="admin-publish-choice"><button type="button" className={project.status === "draft" ? "is-active" : ""} onClick={() => set("status", "draft")}><strong>پیش‌نویس</strong><span>فقط در پنل دیده می‌شود</span></button><button type="button" className={project.status === "published" ? "is-active" : ""} onClick={() => set("status", "published")}><strong>منتشرشده</strong><span>در سایت نمایش داده می‌شود</span></button></div>
+        <div className="admin-publish-note"><i>✓</i><div><strong>ادیت‌ها ابتدا فقط در پنل ذخیره می‌شوند</strong><span>پیش‌نمایش همین نسخه را نشان می‌دهد؛ تا وقتی «انتشار در سایت» را نزنی، نسخه عمومی تغییر نمی‌کند.</span></div></div>
         <details className="admin-advanced-fields"><summary>تنظیمات سئو و نمایش</summary><div className="admin-grid"><label className="admin-field"><span>عنوان گوگل</span><input value={project.seo?.title || ""} onChange={(e) => set("seo", { ...project.seo, title: e.target.value })} /></label><label className="admin-field"><span>توضیحات گوگل</span><input value={project.seo?.description || ""} onChange={(e) => set("seo", { ...project.seo, description: e.target.value })} /></label><label className="admin-field"><span>ترتیب نمایش</span><input type="number" value={project.sortOrder} onChange={(e) => set("sortOrder", Number(e.target.value))} /></label></div></details>
         {project.id ? <section className="admin-version-history"><header><div><h3>تاریخچه نسخه‌ها</h3><p>نسخه‌ها با ذخیره دستی یا انتشار ساخته می‌شوند.</p></div><button type="button" className="admin-icon-button" onClick={() => { setVersionsLoaded(false); void loadVersions(); }} aria-label="تازه‌سازی تاریخچه">↻</button></header>{versionsLoading ? <div className="admin-version-empty">در حال دریافت نسخه‌ها…</div> : versions.length ? <div className="admin-version-list">{versions.map((version, index) => <article key={version.id}><i>{index + 1}</i><div><strong>{version.label}</strong><span>{new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(version.created_at))}</span></div><button type="button" onClick={() => void restoreVersion(version.id)} disabled={restoringVersion === version.id}>{restoringVersion === version.id ? "در حال بازیابی…" : "بازیابی"}</button></article>)}</div> : <div className="admin-version-empty">هنوز نسخه‌ای ثبت نشده؛ یک‌بار پروژه را دستی ذخیره کن.</div>}</section> : null}
         <footer className="admin-step-footer"><button type="button" className="admin-button" onClick={() => setActiveStep(2)}>مرحله قبل</button></footer>
       </section>
 
-      <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <details className="admin-more-menu admin-more-menu--up"><summary aria-label="کارهای بیشتر">•••</summary><div><button className="is-danger" type="button" onClick={remove}>حذف کامل پروژه</button></div></details> : null}<button type="button" className="admin-button" disabled={!project.id} onClick={() => { setPreviewOpen((open) => !open); setPreviewVersion((version) => version + 1); }}>{previewOpen ? "بستن پیش‌نمایش" : "دیدن پیش‌نمایش"}</button><button type="button" className="admin-button admin-button--primary" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "در حال ذخیره…" : project.status === "published" ? "ذخیره و انتشار" : "ذخیره پیش‌نویس"}</button></div></div>
+      <div className="admin-savebar"><div className={`admin-save-state admin-save-state--${saveState}`}><i />{message || statusLabel}</div><div className="admin-array-item__actions">{project.id ? <details className="admin-more-menu admin-more-menu--up"><summary aria-label="کارهای بیشتر">•••</summary><div><button className="is-danger" type="button" onClick={remove}>حذف کامل پروژه</button></div></details> : null}<button type="button" className="admin-button" disabled={!project.id} onClick={() => { setPreviewOpen((open) => !open); setPreviewVersion((version) => version + 1); }}>{previewOpen ? "بستن پیش‌نمایش" : "دیدن پیش‌نمایش"}</button><button type="button" className="admin-button" onClick={save} disabled={pending || !project.slug || !project.title}>{pending || saveState === "saving" ? "در حال ذخیره…" : "ذخیره تغییرات"}</button><button type="button" className="admin-button admin-button--primary" onClick={publish} disabled={pending || !project.slug || !project.title}>{pending ? "در حال انجام…" : "انتشار در سایت"}</button></div></div>
       </> : null}
     </div>
 

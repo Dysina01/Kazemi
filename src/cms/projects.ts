@@ -17,7 +17,7 @@ const publicClient = createPublicClient(supabaseUrl, supabasePublishableKey, {
 
 export function mapProject(row: Record<string, unknown>): ProjectRecord {
   return {
-    id: row.id as string,
+    id: (row.id || row.project_id) as string,
     slug: row.slug as string,
     title: row.title as string,
     category: row.category as string,
@@ -35,14 +35,14 @@ export function mapProject(row: Record<string, unknown>): ProjectRecord {
 }
 
 export const getProject = cache(async (slug: string): Promise<Project | undefined> => {
-  const { data, error } = await publicClient.from("projects").select("*")
-    .eq("slug", slug).eq("status", "published").maybeSingle();
+  const { data, error } = await publicClient.from("published_projects").select("*")
+    .eq("slug", slug).maybeSingle();
   if (error || !data) return getFallbackProject(slug);
-  return mapProject(data);
+  return mapProject({ ...data, status: "published" });
 });
 
 export async function getProjectSlugs(): Promise<string[]> {
-  const { data, error } = await publicClient.from("projects").select("slug").eq("status", "published");
+  const { data, error } = await publicClient.from("published_projects").select("slug");
   if (error) return fallbackProjects.map((project) => project.slug);
   return Array.from(new Set([...(data || []).map(({ slug }) => slug), ...fallbackProjects.map((p) => p.slug)]));
 }
@@ -50,13 +50,13 @@ export async function getProjectSlugs(): Promise<string[]> {
 export type HomepageProject = Pick<ProjectRecord, "id" | "slug" | "title" | "category" | "hero">;
 
 export const getHomepageProjects = cache(async (): Promise<HomepageProject[]> => {
-  const { data, error } = await publicClient.from("projects").select("id,slug,title,category,hero")
-    .eq("status", "published").order("sort_order").limit(3);
+  const { data, error } = await publicClient.from("published_projects").select("project_id,slug,title,category,hero")
+    .eq("featured", true).order("sort_order").limit(3);
   if (error || !data?.length) {
     return fallbackProjects.slice(0, 3).map((project, index) => ({
       id: `fallback-${index}`, slug: project.slug, title: project.title,
       category: project.category, hero: project.hero,
     }));
   }
-  return data as HomepageProject[];
+  return data.map((project) => ({ ...project, id: project.project_id })) as HomepageProject[];
 });
