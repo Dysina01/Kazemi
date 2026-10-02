@@ -72,7 +72,7 @@ export async function saveProject(payload: string, createVersion = false) {
       snapshot,
       label: "ذخیره دستی",
     });
-    if (versionError) return { ok: false, error: versionError.message };
+    if (versionError) return { ok: true, id: savedId, warning: "پروژه ذخیره شد، اما نسخه‌ای در تاریخچه ثبت نشد." };
   }
   revalidatePath("/", "layout");
   revalidatePath(`/projects/${String(project.slug)}`);
@@ -99,7 +99,11 @@ export async function publishProject(payload: string) {
     snapshot: { ...project, id: savedId, status: "published" },
     label: "انتشار در سایت",
   });
-  if (versionError) return { ok: false, error: versionError.message };
+  if (versionError) {
+    revalidatePath("/", "layout");
+    revalidatePath(`/projects/${String(project.slug)}`);
+    return { ok: true, id: savedId, warning: "پروژه منتشر شد، اما نسخه‌ای در تاریخچه ثبت نشد." };
+  }
   revalidatePath("/", "layout");
   revalidatePath(`/projects/${String(project.slug)}`);
   return { ok: true, id: savedId };
@@ -132,11 +136,13 @@ export async function restoreProjectVersion(projectId: string, versionId: string
   });
   if (backupError) return { ok: false, error: backupError.message };
   const snapshot = version.snapshot as Record<string, unknown>;
-  const { error: updateError } = await supabase.from("projects").update(projectRow(snapshot)).eq("id", projectId);
+  const { status: _snapshotStatus, ...restoredContent } = projectRow(snapshot);
+  void _snapshotStatus;
+  const { error: updateError } = await supabase.from("projects").update(restoredContent).eq("id", projectId);
   if (updateError) return { ok: false, error: updateError.message };
   revalidatePath("/", "layout");
   revalidatePath(`/projects/${String(snapshot.slug)}`);
-  return { ok: true, project: { ...snapshot, id: projectId } };
+  return { ok: true, project: { ...snapshot, id: projectId, status: current.status } };
 }
 
 export async function deleteProject(id: string) {
@@ -202,12 +208,12 @@ export async function setHomepageProjects(ids: string[]) {
 export async function duplicateProject(id: string) {
   const supabase = await requireAdmin();
   const { data: source, error: readError } = await supabase.from("projects").select("*").eq("id", id).single();
-  if (readError || !source) return { ok: false, error: readError?.message || "Project not found" };
+  if (readError || !source) return { ok: false, error: readError?.message || "پروژه پیدا نشد" };
   const suffix = Date.now().toString().slice(-6);
   const { id: _id, created_at: _createdAt, updated_at: _updatedAt, published_at: _publishedAt, ...copy } = source;
   void _id; void _createdAt; void _updatedAt; void _publishedAt;
   const { data, error } = await supabase.from("projects").insert({
-    ...copy, slug: `${source.slug}-copy-${suffix}`, title: `${source.title} — Copy`,
+    ...copy, slug: `${source.slug}-copy-${suffix}`, title: `${source.title} — کپی`,
     status: "draft", featured: false, published_at: null,
   }).select("id").single();
   if (error) return { ok: false, error: error.message };

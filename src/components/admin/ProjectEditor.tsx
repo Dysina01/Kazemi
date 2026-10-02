@@ -95,16 +95,16 @@ function AssetFields({ asset, onChange, slug }: { asset: ProjectAsset; onChange:
 function SectionEditor({ section, slug, onChange }: { section: AnySection; slug: string; onChange: (section: AnySection) => void }) {
   const patch = (value: Record<string, unknown>) => onChange({ ...section, ...value } as AnySection);
   if (section._type === "contentSection") {
-    return <div className="admin-grid"><label className="admin-field"><span>Navigation label</span><input value={section.label} onChange={(e) => patch({ label: e.target.value })} /></label><label className="admin-field"><span>Anchor ID</span><input value={section.id} onChange={(e) => patch({ id: e.target.value })} /></label><label className="admin-field admin-span-2"><span>Heading</span><input value={section.heading} onChange={(e) => patch({ heading: e.target.value })} /></label><label className="admin-field admin-span-2"><span>Body — separate paragraphs with a blank line</span><textarea value={Array.isArray(section.body) ? (section.body as string[]).join("\n\n") : ""} onChange={(e) => patch({ body: e.target.value.split(/\n\s*\n/).filter(Boolean) })} /></label><label className="admin-field"><span>Show in sticky navigation</span><select value={section.showInNavigation ? "yes" : "no"} onChange={(e) => patch({ showInNavigation: e.target.value === "yes" })}><option value="yes">Yes</option><option value="no">No</option></select></label><div className="admin-span-2"><strong>Optional media</strong><AssetFields slug={slug} asset={section.media || emptyAsset()} onChange={(media) => patch({ media: media.src ? media : undefined })} /></div></div>;
+    return <div className="admin-grid"><label className="admin-field"><span>عنوان در منوی صفحه</span><input value={section.label} onChange={(e) => patch({ label: e.target.value })} /></label><label className="admin-field"><span>شناسه بخش</span><input dir="ltr" value={section.id} onChange={(e) => patch({ id: e.target.value })} /></label><label className="admin-field admin-span-2"><span>تیتر بخش</span><input value={section.heading} onChange={(e) => patch({ heading: e.target.value })} /></label><label className="admin-field admin-span-2"><span>متن بخش</span><textarea value={Array.isArray(section.body) ? (section.body as string[]).join("\n\n") : ""} onChange={(e) => patch({ body: e.target.value.split(/\n\s*\n/).filter(Boolean) })} /><small>برای ساخت پاراگراف جدید، یک خط خالی بگذار.</small></label><label className="admin-field"><span>نمایش در منوی ثابت صفحه</span><select value={section.showInNavigation ? "yes" : "no"} onChange={(e) => patch({ showInNavigation: e.target.value === "yes" })}><option value="yes">نمایش داده شود</option><option value="no">نمایش داده نشود</option></select></label><div className="admin-span-2"><strong>تصویر یا ویدئوی اختیاری</strong><AssetFields slug={slug} asset={section.media || emptyAsset()} onChange={(media) => patch({ media: media.src ? media : undefined })} /></div></div>;
   }
   if (section._type === "gallerySection") {
-    return <div className="admin-array">{section.items.map((item, index) => <div className="admin-array-item" key={item._key}><div className="admin-array-item__bar"><strong>Gallery item {index + 1}</strong><button type="button" className="admin-icon-button" onClick={() => patch({ items: section.items.filter((entry) => entry._key !== item._key) })}>×</button></div><AssetFields slug={slug} asset={item} onChange={(asset) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, ...asset } : entry) })} /><div className="admin-grid"><label className="admin-field"><span>Size</span><select value={item.size} onChange={(e) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, size: e.target.value } : entry) })}><option value="wide">Wide</option><option value="narrow">Narrow</option></select></label><label className="admin-field"><span>Title</span><input value={item.title || ""} onChange={(e) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, title: e.target.value } : entry) })} /></label><label className="admin-field admin-span-2"><span>Description</span><input value={item.description || ""} onChange={(e) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, description: e.target.value } : entry) })} /></label></div></div>)}<button type="button" className="admin-button" onClick={() => patch({ items: [...section.items, { _key: uid(), size: "wide", ...emptyAsset() }] })}>+ Gallery item</button></div>;
+    return <div className="admin-array">{section.items.map((item, index) => <div className="admin-array-item" key={item._key}><div className="admin-array-item__bar"><strong>تصویر {index + 1}</strong><button type="button" className="admin-icon-button" onClick={() => patch({ items: section.items.filter((entry) => entry._key !== item._key) })} aria-label="حذف تصویر">×</button></div><AssetFields slug={slug} asset={item} onChange={(asset) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, ...asset } : entry) })} /><div className="admin-grid"><label className="admin-field"><span>اندازه نمایش</span><select value={item.size} onChange={(e) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, size: e.target.value } : entry) })}><option value="wide">عریض</option><option value="narrow">باریک</option></select></label><label className="admin-field"><span>عنوان تصویر</span><input value={item.title || ""} onChange={(e) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, title: e.target.value } : entry) })} /></label><label className="admin-field admin-span-2"><span>توضیح تصویر</span><input value={item.description || ""} onChange={(e) => patch({ items: section.items.map((entry) => entry._key === item._key ? { ...item, description: e.target.value } : entry) })} /></label></div></div>)}<button type="button" className="admin-button" onClick={() => patch({ items: [...section.items, { _key: uid(), size: "wide", ...emptyAsset() }] })}>+ افزودن تصویر</button></div>;
   }
   if (section._type === "metricsSection") {
-    return <div className="admin-form-stack"><div className="admin-grid"><label className="admin-field"><span>Label</span><input value={section.label || ""} onChange={(e) => patch({ label: e.target.value })} /></label><label className="admin-field"><span>Heading</span><input value={section.heading || ""} onChange={(e) => patch({ heading: e.target.value })} /></label></div>{section.items.map((item) => <div className="admin-grid" key={item._key}><label className="admin-field"><span>Value</span><input value={item.value} onChange={(e) => patch({ items: section.items.map((x) => x._key === item._key ? { ...x, value: e.target.value } : x) })} /></label><label className="admin-field"><span>Metric label</span><input value={item.label} onChange={(e) => patch({ items: section.items.map((x) => x._key === item._key ? { ...x, label: e.target.value } : x) })} /></label></div>)}<button type="button" className="admin-button" onClick={() => patch({ items: [...section.items, { _key: uid(), label: "", value: "" }] })}>+ Metric</button></div>;
+    return <div className="admin-form-stack"><div className="admin-grid"><label className="admin-field"><span>عنوان در منو</span><input value={section.label || ""} onChange={(e) => patch({ label: e.target.value })} /></label><label className="admin-field"><span>تیتر بخش</span><input value={section.heading || ""} onChange={(e) => patch({ heading: e.target.value })} /></label></div>{section.items.map((item) => <div className="admin-grid" key={item._key}><label className="admin-field"><span>مقدار</span><input value={item.value} onChange={(e) => patch({ items: section.items.map((x) => x._key === item._key ? { ...x, value: e.target.value } : x) })} /></label><label className="admin-field"><span>عنوان شاخص</span><input value={item.label} onChange={(e) => patch({ items: section.items.map((x) => x._key === item._key ? { ...x, label: e.target.value } : x) })} /></label></div>)}<button type="button" className="admin-button" onClick={() => patch({ items: [...section.items, { _key: uid(), label: "", value: "" }] })}>+ افزودن شاخص</button></div>;
   }
-  if (section._type === "quoteSection") return <div className="admin-grid"><label className="admin-field admin-span-2"><span>Quote</span><textarea value={section.quote} onChange={(e) => patch({ quote: e.target.value })} /></label><label className="admin-field admin-span-2"><span>Attribution</span><input value={section.attribution || ""} onChange={(e) => patch({ attribution: e.target.value })} /></label></div>;
-  if (section._type === "beforeAfterSection") return <div className="admin-form-stack"><div className="admin-grid"><label className="admin-field"><span>Label</span><input value={section.label || ""} onChange={(e) => patch({ label: e.target.value })} /></label><label className="admin-field"><span>Heading</span><input value={section.heading || ""} onChange={(e) => patch({ heading: e.target.value })} /></label></div><strong>Before</strong><AssetFields slug={slug} asset={section.before} onChange={(before) => patch({ before })} /><strong>After</strong><AssetFields slug={slug} asset={section.after} onChange={(after) => patch({ after })} /></div>;
+  if (section._type === "quoteSection") return <div className="admin-grid"><label className="admin-field admin-span-2"><span>متن نقل‌قول</span><textarea value={section.quote} onChange={(e) => patch({ quote: e.target.value })} /></label><label className="admin-field admin-span-2"><span>نام گوینده یا منبع</span><input value={section.attribution || ""} onChange={(e) => patch({ attribution: e.target.value })} /></label></div>;
+  if (section._type === "beforeAfterSection") return <div className="admin-form-stack"><div className="admin-grid"><label className="admin-field"><span>عنوان در منو</span><input value={section.label || ""} onChange={(e) => patch({ label: e.target.value })} /></label><label className="admin-field"><span>تیتر بخش</span><input value={section.heading || ""} onChange={(e) => patch({ heading: e.target.value })} /></label></div><strong>تصویر قبل</strong><AssetFields slug={slug} asset={section.before} onChange={(before) => patch({ before })} /><strong>تصویر بعد</strong><AssetFields slug={slug} asset={section.after} onChange={(after) => patch({ after })} /></div>;
   return null;
 }
 
@@ -129,6 +129,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const savedSnapshot = useRef(JSON.stringify(initialProject));
+  const saveRequest = useRef(0);
   const previewRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const visibleSections = project.sections.filter((section) => !section.hidden);
@@ -200,20 +201,22 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   }
   const persist = useCallback(async (showMessage = false) => {
     if (!project.slug || !project.title) return;
+    const requestId = ++saveRequest.current;
     setSaveState("saving");
     if (showMessage) setMessage("");
     const snapshot = JSON.stringify(project);
     const result = await saveProject(snapshot, showMessage);
+    if (requestId !== saveRequest.current) return;
     if (!result.ok) {
       setSaveState("error");
-      setMessage(result.error || "Save failed");
+      setMessage(result.error || "ذخیره انجام نشد");
       return;
     }
     savedSnapshot.current = snapshot;
     setSaveState("saved");
     if (previewOpen) setPreviewVersion((version) => version + 1);
     if (showMessage) setVersionsLoaded(false);
-    if (showMessage) setMessage("Saved successfully");
+    if (showMessage) setMessage(result.warning || "تغییرات با موفقیت ذخیره شد");
     if (!project.id && result.id) router.replace(`/admin/projects/${result.id}`);
     if (showMessage) router.refresh();
   }, [previewOpen, project, router]);
@@ -246,7 +249,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     const snapshot = JSON.stringify(project);
     if (snapshot === savedSnapshot.current) return;
     setSaveState("unsaved");
-    const timeout = window.setTimeout(() => void persist(), 1200);
+    const timeout = window.setTimeout(() => void persist(), 2200);
     return () => window.clearTimeout(timeout);
   }, [project, persist]);
   useEffect(() => {
@@ -282,7 +285,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
       setProject(published);
       savedSnapshot.current = JSON.stringify(published);
       setSaveState("saved");
-      setMessage("نسخه جدید با موفقیت روی سایت منتشر شد");
+      setMessage(result.warning || "نسخه جدید با موفقیت روی سایت منتشر شد");
       setVersionsLoaded(false);
       setPreviewVersion((version) => version + 1);
       if (!project.id) router.replace(`/admin/projects/${savedId}`);

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useDeferredValue, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteProjectFromLibrary, duplicateProject, reorderProjects, setProjectStatus } from "@/app/admin/actions";
 import type { ProjectAsset } from "@/sanity/types";
@@ -31,12 +31,14 @@ export default function ProjectLibrary({ initialProjects }: { initialProjects: L
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | LibraryProject["status"]>("all");
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const deferredSearch = useDeferredValue(search);
   const visible = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase("fa");
+    const query = deferredSearch.trim().toLocaleLowerCase("fa");
     return projects.filter((project) => (filter === "all" || project.status === filter) && `${project.title} ${project.category}`.toLocaleLowerCase("fa").includes(query));
-  }, [projects, filter, search]);
+  }, [projects, filter, deferredSearch]);
 
   function drop(targetId: string) {
     if (!draggedId || draggedId === targetId || filter !== "all" || search) return;
@@ -51,26 +53,43 @@ export default function ProjectLibrary({ initialProjects }: { initialProjects: L
   }
 
   function changeStatus(id: string, status: LibraryProject["status"]) {
+    const previousStatus = projects.find((item) => item.id === id)?.status;
+    setActionError("");
     setProjects((items) => items.map((item) => item.id === id ? { ...item, status } : item));
     startTransition(async () => {
       const result = await setProjectStatus(id, status);
-      if (!result.ok) router.refresh();
+      if (!result.ok) {
+        if (previousStatus) setProjects((items) => items.map((item) => item.id === id ? { ...item, status: previousStatus } : item));
+        setActionError(result.error || "تغییر وضعیت انجام نشد.");
+      } else router.refresh();
     });
   }
 
   function duplicate(id: string) {
+    setActionError("");
     startTransition(async () => {
       const result = await duplicateProject(id);
       if (result.ok && result.id) router.push(`/admin/projects/${result.id}`);
+      else setActionError(result.error || "ساخت کپی انجام نشد.");
     });
   }
 
   function remove(id: string, title: string) {
     if (!confirm(`پروژه «${title}» برای همیشه حذف شود؟`)) return;
+    const removedIndex = projects.findIndex((item) => item.id === id);
+    const removedProject = projects[removedIndex];
+    setActionError("");
     setProjects((items) => items.filter((item) => item.id !== id));
     startTransition(async () => {
       const result = await deleteProjectFromLibrary(id);
-      if (!result.ok) router.refresh();
+      if (!result.ok && removedProject) {
+        setProjects((items) => {
+          const next = [...items];
+          next.splice(Math.max(0, removedIndex), 0, removedProject);
+          return next;
+        });
+        setActionError(result.error || "حذف پروژه انجام نشد.");
+      }
     });
   }
 
@@ -82,6 +101,7 @@ export default function ProjectLibrary({ initialProjects }: { initialProjects: L
       ] as const).map(([value, label]) => <button type="button" className={filter === value ? "is-active" : ""} onClick={() => setFilter(value)} key={value}>{label}</button>)}</div>
       {pending ? <span className="admin-library-saving">در حال انجام…</span> : null}
     </div>
+    {actionError ? <p className="admin-error" role="alert">{actionError}</p> : null}
     {visible.length ? <section className="admin-project-table admin-card">
       <header><span>پروژه</span><span>نوع پروژه</span><span>آخرین ویرایش</span><span>وضعیت</span><span>عملیات</span></header>
       <div>{visible.map((project) => <article className={`admin-project-list-row ${draggedId === project.id ? "is-dragging" : ""}`} key={project.id} onDragOver={(event) => event.preventDefault()} onDrop={() => drop(project.id)}>

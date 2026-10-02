@@ -28,7 +28,7 @@ export default function LoginForm() {
       return;
     }
     if (!data.session) {
-      setNotice("Check your email to confirm the owner account, then sign in here.");
+      setNotice("ایمیل تأیید را باز کن؛ سپس از همین صفحه وارد شو.");
       setLoading(false);
       return;
     }
@@ -39,7 +39,7 @@ export default function LoginForm() {
       : { data: null };
     if (!membership) {
       await supabase.auth.signOut();
-      setError("This email is not allowed to access the CMS.");
+      setError("این ایمیل اجازه ورود به پنل را ندارد.");
       setLoading(false);
       return;
     }
@@ -49,12 +49,12 @@ export default function LoginForm() {
 
   return (
     <form className="admin-form-stack" onSubmit={submit}>
-      <label className="admin-field"><span>Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></label>
-      <label className="admin-field"><span>Password</span><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></label>
+      <label className="admin-field"><span>ایمیل</span><input type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></label>
+      <label className="admin-field"><span>رمز عبور</span><input type="password" dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete={createMode ? "new-password" : "current-password"} /></label>
       {error ? <p className="admin-error">{error}</p> : null}
       {notice ? <p>{notice}</p> : null}
-      <button className="admin-button admin-button--primary" disabled={loading}>{loading ? "Please wait…" : createMode ? "Create owner account" : "Sign in"}</button>
-      <button type="button" className="admin-button" onClick={() => { setCreateMode(!createMode); setError(""); setNotice(""); }}>{createMode ? "I already have an account" : "Create the first owner account"}</button>
+      <button className="admin-button admin-button--primary" disabled={loading}>{loading ? "کمی صبر کن…" : createMode ? "ساخت حساب مدیر" : "ورود به پنل"}</button>
+      <button type="button" className="admin-button" onClick={() => { setCreateMode(!createMode); setError(""); setNotice(""); }}>{createMode ? "از قبل حساب دارم" : "ساخت اولین حساب مدیر"}</button>
     </form>
   );
 }
