@@ -64,12 +64,6 @@ function templateContent(id: TemplateId): Pick<EditableProject, "facts" | "secti
   return { facts: [], sections: [] };
 }
 
-export const emptyProject = (): EditableProject => ({
-  id: "", slug: "", title: "", category: "", year: String(new Date().getFullYear()),
-  description: "", hero: emptyAsset(), facts: [], sections: [], status: "draft",
-  featured: false, sortOrder: 0, seo: { title: "", description: "" },
-});
-
 function AssetFields({ asset, onChange, slug }: { asset: ProjectAsset; onChange: (asset: ProjectAsset) => void; slug: string }) {
   const [uploading, setUploading] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
