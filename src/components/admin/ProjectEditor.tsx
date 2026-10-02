@@ -76,6 +76,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const savedSnapshot = useRef(JSON.stringify(initialProject));
+  const previewRef = useRef<HTMLDivElement>(null);
   const set = <K extends keyof EditableProject>(key: K, value: EditableProject[K]) => setProject((current) => ({ ...current, [key]: value }));
   const addSection = (type: ProjectSection["_type"]) => {
     const base = { _key: uid(), _type: type };
@@ -126,7 +127,7 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
   function remove() { if (!project.id || !confirm("این پروژه برای همیشه حذف شود؟")) return; startTransition(async () => { await deleteProject(project.id); }); }
   const statusLabel = saveState === "saving" ? "در حال ذخیره…" : saveState === "unsaved" ? "تغییرات ذخیره نشده" : saveState === "error" ? "ذخیره انجام نشد" : "همه تغییرات ذخیره شده";
 
-  return <div className="admin-editor-shell">
+  return <div className={`admin-editor-shell ${previewOpen && project.id ? "has-preview" : ""}`}>
     <div className="admin-editor">
       <nav className="admin-editor-steps" aria-label="مراحل ساخت پروژه">{["اطلاعات کلی", "تصاویر و مشخصات", "محتوای پروژه", "بررسی و انتشار"].map((label, index) => <button type="button" className={activeStep === index ? "is-active" : ""} onClick={() => setActiveStep(index)} key={label}><i>{index + 1}</i><span>{label}</span></button>)}</nav>
 
@@ -169,8 +170,8 @@ export default function ProjectEditor({ initialProject }: { initialProject: Edit
     </div>
 
     {previewOpen && project.id ? <section className="admin-live-preview">
-      <header><div><strong>پیش‌نمایش پروژه</strong><span>نمایش واقعی و responsive صفحه پروژه</span></div><div className="admin-array-item__actions"><button className="admin-button" type="button" onClick={() => window.open(`/admin/preview/${project.id}`, "_blank")}>بازکردن تمام‌صفحه ↗</button><button className="admin-icon-button" type="button" onClick={() => setPreviewVersion((version) => version + 1)} aria-label="تازه‌سازی پیش‌نمایش">↻</button></div></header>
-      <div className="admin-preview-frame"><iframe key={previewVersion} src={`/admin/preview/${project.id}?v=${previewVersion}`} title="پیش‌نمایش پروژه" /></div>
+      <header><div className="admin-preview-heading"><strong>پیش‌نمایش پروژه</strong><span>نمایش واقعی صفحه پروژه</span></div><div className="admin-preview-actions"><button className="admin-icon-button" type="button" onClick={() => setPreviewVersion((version) => version + 1)} aria-label="تازه‌سازی پیش‌نمایش" title="تازه‌سازی"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5M6.1 9a7 7 0 0 1 11.3-2.6L20 9M4 15l2.6 2.6A7 7 0 0 0 17.9 15" /></svg></button><button className="admin-icon-button" type="button" onClick={() => void previewRef.current?.requestFullscreen()} aria-label="نمایش تمام‌صفحه" title="تمام‌صفحه"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" /></svg></button></div></header>
+      <div className="admin-preview-frame" ref={previewRef}><iframe key={previewVersion} src={`/admin/preview/${project.id}?v=${previewVersion}`} title="پیش‌نمایش پروژه" /></div>
     </section> : null}
   </div>;
 }
